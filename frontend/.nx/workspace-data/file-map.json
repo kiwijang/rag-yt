@@ -13,307 +13,175 @@
   "fileMap": {
     "nonProjectFiles": [
       {
-        "file": "dist/frontend/browser/styles-RTH3BP7P.css",
-        "hash": "7484655141266639151"
-      },
-      {
-        "file": "dist/frontend/browser/index.html",
-        "hash": "8814435985429437628"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-W2YS2J2L.js",
-        "hash": "6777764099042814315"
-      },
-      {
-        "file": ".nx/cache/terminalOutputs/12509678193854727234",
-        "hash": "12319002270696927429"
-      },
-      {
-        "file": ".nx/workspace-data/d/daemon.log",
-        "hash": "8514221766664769895"
+        "file": "tsconfig.spec.json",
+        "hash": "3435948518263287226"
       },
       {
         "file": ".nx/workspace-data/project-graph.json",
         "hash": "16008161613167184312"
       },
       {
-        "file": "dist/frontend/browser/main-MVAQ6D6S.js",
-        "hash": "11992529687963290268"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-EWHQFFW2.js",
-        "hash": "12359144624522887527"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-GRT24HM4.js",
-        "hash": "7180836540886701755"
-      },
-      {
-        "file": "tsconfig.spec.json",
-        "hash": "3435948518263287226"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-VTCAW2MO.js",
-        "hash": "5062395781425940919"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-CVUH4MOK.js",
-        "hash": "3973811321929936777"
-      },
-      {
-        "file": "dist/frontend/browser/main-TRZFQ4S4.js",
-        "hash": "12956281543010913729"
-      },
-      {
-        "file": ".nx/workspace-data/75352492-5128-4f61-80ef-98eaecc7ae37.db-wal",
-        "hash": "10547333133223448175"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-XL6J4ELX.js",
-        "hash": "9312211150115872486"
-      },
-      {
-        "file": "nx.json",
-        "hash": "5478306668844996369"
-      },
-      {
-        "file": ".nx/cache/terminalOutputs/8620332153165197771",
-        "hash": "17303306170461902017"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-CU4E5C7Q.js",
-        "hash": "939589294705113015"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-BAL2KKRA.js",
-        "hash": "15808053048594777893"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-W22BOCMI.js",
-        "hash": "15134980007912625725"
-      },
-      {
-        "file": "tsconfig.base.json",
-        "hash": "10335795658115293626"
-      },
-      {
-        "file": "query",
-        "hash": "13642550493263202727"
-      },
-      {
-        "file": "tsconfig.json",
-        "hash": "3429258900713358161"
+        "file": "angular.json",
+        "hash": "11250697205911930765"
       },
       {
         "file": ".nx/workspace-data/file-map.json",
-        "hash": "14344630909790026699"
+        "hash": "17227473422292015410"
       },
       {
-        "file": "package-lock.json",
-        "hash": "5476847820471487515"
-      },
-      {
-        "file": "build-libs-migration.log",
-        "hash": "17137231670595070879"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-FHXYGFUL.js",
-        "hash": "15827404410686190520"
-      },
-      {
-        "file": "build-frontend.log",
-        "hash": "4105953388142803838"
-      },
-      {
-        "file": "dist/frontend/3rdpartylicenses.txt",
-        "hash": "11810022167792374920"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-CWBJ255C.js",
-        "hash": "16361519094496699231"
-      },
-      {
-        "file": "node_modules/.package-lock.json",
-        "hash": "1754008777729825745"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-XW54MDFR.js",
-        "hash": "14946017136924048588"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-33JOYFJV.js",
-        "hash": "2648179432419800066"
-      },
-      {
-        "file": ".nx/cache/run.json",
-        "hash": "2781682601892855208"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-2FPC6JV3.js",
-        "hash": "8720050350319412072"
-      },
-      {
-        "file": ".angular/cache/18.2.21/frontend/.tsbuildinfo",
-        "hash": "10462594919253684918"
-      },
-      {
-        "file": "package.json",
-        "hash": "14715373485997569515"
-      },
-      {
-        "file": ".nx/workspace-data/75352492-5128-4f61-80ef-98eaecc7ae37.db-shm",
-        "hash": "2541727792141271098"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-4LCHNPS2.js",
-        "hash": "10349701456603360946"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-YRVXX3TJ.js",
-        "hash": "4328746764091668223"
-      },
-      {
-        "file": "build.log",
-        "hash": "3352929381372178888"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-GESRSDXT.js",
-        "hash": "14990118070551127445"
-      },
-      {
-        "file": "dist/frontend/browser/chunk-OTWOH37P.js",
-        "hash": "6364671786046817054"
+        "file": ".nx/workspace-data/74a8ae5b-37be-49ec-8a64-754576df8673.db-shm",
+        "hash": "14218868563063351040"
       },
       {
         "file": "scripts/generate-openapi-client.mjs",
         "hash": "11104117227295821063"
       },
       {
-        "file": "dist/frontend/browser/chunk-5633EIDV.js",
-        "hash": "10802541570705429976"
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/chunk-EJI3MQGK.js.map",
+        "hash": "187937070504855482"
       },
       {
-        "file": "tailwind.config.js",
-        "hash": "4051845661775644648"
+        "file": ".nx/cache/terminalOutputs/11765916922712155143",
+        "hash": "4815726137153530319"
       },
       {
-        "file": "postcss.config.js",
-        "hash": "16750483254333733706"
+        "file": ".nx/workspace-data/d/daemon.log",
+        "hash": "8092205262163314862"
       },
       {
-        "file": "angular.json",
-        "hash": "11250697205911930765"
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/@angular_core.js.map",
+        "hash": "9947606979680686569"
       },
       {
-        "file": "tsconfig.app.json",
-        "hash": "15249898738162531318"
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/shadow-css-VQZ6FHJX.js",
+        "hash": "16510431386386215774"
       },
       {
-        "file": "dist/frontend/browser/chunk-M4S6YE4T.js",
-        "hash": "13968600658647365480"
+        "file": "build.log",
+        "hash": "3352929381372178888"
       },
       {
-        "file": "dist/frontend/browser/chunk-PIZMWDDL.js",
-        "hash": "1193853452117715167"
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/package.json",
+        "hash": "8630294688235076505"
       },
       {
-        "file": "dist/frontend/browser/polyfills-FFHMD2TL.js",
-        "hash": "13576170651250845855"
+        "file": ".nx/cache/run.json",
+        "hash": "4896228378211461715"
+      },
+      {
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/index9-QKCPE4PN.js.map",
+        "hash": "6440824257187732822"
+      },
+      {
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/chunk-QHQP2P2Z.js",
+        "hash": "4412840137062654106"
+      },
+      {
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/ios.transition-KF4BWVR7.js",
+        "hash": "5902579962808136026"
+      },
+      {
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/chunk-CJC3DIUN.js",
+        "hash": "15858987292737717358"
+      },
+      {
+        "file": "package.json",
+        "hash": "14715373485997569515"
+      },
+      {
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/input-shims-6POANUP4.js.map",
+        "hash": "717635201069874782"
       },
       {
         "file": "build-after-lib.log",
         "hash": "1832659719202430523"
       },
       {
-        "file": "dist/frontend/browser/chunk-QX5KOKPP.js",
-        "hash": "10212382953673550942"
+        "file": "build-libs-migration.log",
+        "hash": "17137231670595070879"
       },
       {
-        "file": "dist/frontend/browser/chunk-TDWYZUIH.js",
-        "hash": "7681027019355811598"
+        "file": "package-lock.json",
+        "hash": "5476847820471487515"
+      },
+      {
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/index9-QKCPE4PN.js",
+        "hash": "15161224067668695567"
+      },
+      {
+        "file": "query",
+        "hash": "13642550493263202727"
+      },
+      {
+        "file": "nx.json",
+        "hash": "5478306668844996369"
+      },
+      {
+        "file": "postcss.config.js",
+        "hash": "16750483254333733706"
+      },
+      {
+        "file": "tsconfig.app.json",
+        "hash": "15249898738162531318"
+      },
+      {
+        "file": ".angular/cache/18.2.21/frontend/.tsbuildinfo",
+        "hash": "8949693147173389819"
+      },
+      {
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/focus-visible-LKFGWR5D.js.map",
+        "hash": "9947606979680686569"
+      },
+      {
+        "file": ".nx/workspace-data/74a8ae5b-37be-49ec-8a64-754576df8673.db",
+        "hash": "6240709564311096908"
+      },
+      {
+        "file": "tailwind.config.js",
+        "hash": "4051845661775644648"
+      },
+      {
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/md.transition-PZVIFADH.js.map",
+        "hash": "9947606979680686569"
+      },
+      {
+        "file": "tsconfig.base.json",
+        "hash": "10335795658115293626"
+      },
+      {
+        "file": ".nx/workspace-data/74a8ae5b-37be-49ec-8a64-754576df8673.db-wal",
+        "hash": "14232172554233025386"
+      },
+      {
+        "file": "build-frontend.log",
+        "hash": "4105953388142803838"
+      },
+      {
+        "file": "tsconfig.json",
+        "hash": "3429258900713358161"
+      },
+      {
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/@angular_router.js",
+        "hash": "8341244475352649077"
+      },
+      {
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/status-tap-ODXN52Y2.js",
+        "hash": "6589043467048308893"
+      },
+      {
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/@angular_forms.js",
+        "hash": "6991557580025725656"
+      },
+      {
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/focus-visible-LKFGWR5D.js",
+        "hash": "7417103440761857226"
+      },
+      {
+        "file": ".angular/cache/18.2.21/frontend/vite/deps_temp_c76895d2/ios.transition-KF4BWVR7.js.map",
+        "hash": "9947606979680686569"
       }
     ],
     "projectFileMap": {
-      "frontend": [
-        {
-          "file": "apps/frontend/src/app/app.component.ts",
-          "hash": "4530759741970590162",
-          "deps": [
-            "npm:@angular/core",
-            "npm:@ionic/angular"
-          ]
-        },
-        {
-          "file": "apps/frontend/src/app/app.routes.ts",
-          "hash": "14568169507827082063",
-          "deps": [
-            "npm:@angular/router"
-          ]
-        },
-        {
-          "file": "apps/frontend/src/app/guards/admin.guard.ts",
-          "hash": "3041809500122149880",
-          "deps": [
-            "npm:@angular/core",
-            "npm:@angular/router"
-          ]
-        },
-        {
-          "file": "apps/frontend/src/app/pages/dashboard-page/dashboard-page.component.ts",
-          "hash": "1185213182344386442",
-          "deps": [
-            "npm:@angular/common",
-            "npm:@angular/core",
-            "npm:@angular/forms",
-            "npm:@angular/router",
-            "npm:rxjs",
-            "api-client"
-          ]
-        },
-        {
-          "file": "apps/frontend/src/app/pages/login-page/login-page.component.ts",
-          "hash": "14319317397754164141",
-          "deps": [
-            "npm:@angular/core",
-            "npm:@angular/common",
-            "npm:@angular/forms",
-            "npm:@angular/router",
-            "npm:rxjs",
-            "api-client"
-          ]
-        },
-        {
-          "file": "apps/frontend/src/app/pages/user-rag-page/user-rag-page.component.ts",
-          "hash": "15309843787815862193",
-          "deps": [
-            "npm:@angular/common",
-            "npm:@angular/core",
-            "npm:@angular/forms",
-            "npm:@angular/router",
-            "npm:rxjs",
-            "api-client"
-          ]
-        },
-        {
-          "file": "apps/frontend/src/index.html",
-          "hash": "2801415354404476451"
-        },
-        {
-          "file": "apps/frontend/src/main.ts",
-          "hash": "12568536062906354159",
-          "deps": [
-            "npm:@angular/platform-browser",
-            "npm:@angular/router",
-            "npm:@ionic/angular",
-            "npm:@angular/common",
-            "api-client"
-          ]
-        },
-        {
-          "file": "apps/frontend/src/styles.scss",
-          "hash": "100505025304192577"
-        }
-      ],
       "tailwind-config": [
         {
           "file": "libs/tailwind-config/project.json",
@@ -433,6 +301,87 @@
           "file": "libs/api-client/tsconfig.lib.json",
           "hash": "3904288127410727897"
         }
+      ],
+      "frontend": [
+        {
+          "file": "apps/frontend/src/app/app.component.ts",
+          "hash": "4530759741970590162",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@ionic/angular"
+          ]
+        },
+        {
+          "file": "apps/frontend/src/app/app.routes.ts",
+          "hash": "14568169507827082063",
+          "deps": [
+            "npm:@angular/router"
+          ]
+        },
+        {
+          "file": "apps/frontend/src/app/guards/admin.guard.ts",
+          "hash": "3041809500122149880",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/router"
+          ]
+        },
+        {
+          "file": "apps/frontend/src/app/pages/dashboard-page/dashboard-page.component.ts",
+          "hash": "1185213182344386442",
+          "deps": [
+            "npm:@angular/common",
+            "npm:@angular/core",
+            "npm:@angular/forms",
+            "npm:@angular/router",
+            "npm:rxjs",
+            "api-client"
+          ]
+        },
+        {
+          "file": "apps/frontend/src/app/pages/login-page/login-page.component.ts",
+          "hash": "14319317397754164141",
+          "deps": [
+            "npm:@angular/core",
+            "npm:@angular/common",
+            "npm:@angular/forms",
+            "npm:@angular/router",
+            "npm:rxjs",
+            "api-client"
+          ]
+        },
+        {
+          "file": "apps/frontend/src/app/pages/user-rag-page/user-rag-page.component.ts",
+          "hash": "15309843787815862193",
+          "deps": [
+            "npm:@angular/common",
+            "npm:@angular/core",
+            "npm:@angular/forms",
+            "npm:@angular/router",
+            "npm:rxjs",
+            "api-client"
+          ]
+        },
+        {
+          "file": "apps/frontend/src/index.html",
+          "hash": "2801415354404476451"
+        },
+        {
+          "file": "apps/frontend/src/main.ts",
+          "hash": "12568536062906354159",
+          "deps": [
+            "npm:@angular/platform-browser",
+            "npm:@angular/router",
+            "npm:@ionic/angular",
+            "npm:@angular/common",
+            "api-client"
+          ]
+        },
+        {
+          "file": "apps/frontend/src/styles.scss",
+          "hash": "100505025304192577"
+        }
       ]
     }
   }
+}
