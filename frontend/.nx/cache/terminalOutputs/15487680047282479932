@@ -1,0 +1,55 @@
+[33m❯[39m Building...
+[32m✔[39m Building...
+[37m[1mInitial chunk files[22m  [2m | [22m[1mNames[22m               [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m[39m
+[37m[32mmain-H4T52YXV.js[39m[37m     [2m | [22m[2mmain[22m                [2m | [22m[36m433.94 kB[39m[37m[2m | [22m              [36m109.50 kB[39m[37m[39m
+[37m[32mchunk-5633EIDV.js[39m[37m    [2m | [22m[2m-[22m                   [2m | [22m [36m62.18 kB[39m[37m[2m | [22m               [36m20.18 kB[39m[37m[39m
+[37m[32mpolyfills-FFHMD2TL.js[39m[37m[2m | [22m[2mpolyfills[22m           [2m | [22m [36m34.52 kB[39m[37m[2m | [22m               [36m11.28 kB[39m[37m[39m
+[37m[32mstyles-RTH3BP7P.css[39m[37m  [2m | [22m[2mstyles[22m              [2m | [22m [36m18.83 kB[39m[37m[2m | [22m                [36m3.90 kB[39m[37m[39m
+[37m[32mchunk-XL6J4ELX.js[39m[37m    [2m | [22m[2m-[22m                   [2m | [22m [36m10.22 kB[39m[37m[2m | [22m                [36m2.67 kB[39m[37m[39m
+[37m[32mchunk-W22BOCMI.js[39m[37m    [2m | [22m[2m-[22m                   [2m | [22m  [36m8.50 kB[39m[37m[2m | [22m                [36m3.23 kB[39m[37m[39m
+[37m[32mchunk-OTWOH37P.js[39m[37m    [2m | [22m[2m-[22m                   [2m | [22m  [36m5.95 kB[39m[37m[2m | [22m                [36m2.23 kB[39m[37m[39m
+[37m[32mchunk-CWBJ255C.js[39m[37m    [2m | [22m[2m-[22m                   [2m | [22m  [36m4.21 kB[39m[37m[2m | [22m                [36m1.88 kB[39m[37m[39m
+[37m[32mchunk-BAL2KKRA.js[39m[37m    [2m | [22m[2m-[22m                   [2m | [22m  [36m1.57 kB[39m[37m[2m | [22m              [36m659 bytes[39m[37m[39m
+[37m[32mchunk-EWHQFFW2.js[39m[37m    [2m | [22m[2m-[22m                   [2m | [22m  [36m1.13 kB[39m[37m[2m | [22m              [36m541 bytes[39m[37m[39m
+[37m[32mchunk-M4S6YE4T.js[39m[37m    [2m | [22m[2m-[22m                   [2m | [22m  [36m1.11 kB[39m[37m[2m | [22m              [36m573 bytes[39m[37m[39m
+[37m[32mchunk-VTCAW2MO.js[39m[37m    [2m | [22m[2m-[22m                   [2m | [22m  [36m1.04 kB[39m[37m[2m | [22m              [36m467 bytes[39m[37m[39m
+[37m[32mchunk-4LCHNPS2.js[39m[37m    [2m | [22m[2m-[22m             [39m[37m      [2m | [22m  [36m1.03 kB[39m[37m[2m | [22m              [36m471 bytes[39m[37m[39m
+[37m[32mchunk-GESRSDXT.js[39m[37m    [2m | [22m[2m-[22m                   [2m | [22m[36m671 bytes[39m[37m[2m | [22m              [36m671 bytes[39m[37m[39m
+[37m[32mchunk-2FPC6JV3.js[39m[37m    [2m | [22m[2m-[22m                   [2m | [22m[36m174 bytes[39m[37m[2m | [22m              [36m174 bytes[39m[37m[39m
+[37m[39m
+[37m[1m [22m                    [2m | [22m[1mInitial total[22m       [2m | [22m[1m[93m585.07 kB[39m[37m[22m[2m | [22m              [1m158.43 kB[22m[39m
+[37m[39m
+[37m[1mLazy chunk files[22m     [2m | [22m[1mNames[22m               [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m[39m
+[37m[32mchunk-CU4E5C7Q.js[39m[37m    [2m | [22m[2minput-shims[22m         [2m | [22m  [36m5.04 kB[39m[37m[2m | [22m                [36m1.98 kB[39m[37m[39m
+[37m[32mchunk-GRT24HM4.js[39m[37m    [2m | [22m[2mshadow-css[22m          [2m | [22m  [36m4.46 kB[39m[37m[2m | [22m                [36m1.97 kB[39m[37m[39m
+[37m[32mchunk-CVUH4MOK.js[39m[37m    [2m | [22m[2mindex9[22m              [2m | [22m  [36m1.66 kB[39m[37m[2m | [22m              [36m784 bytes[39m[37m[39m
+[37m[32mchunk-33JOYFJV.js[39m[37m    [2m | [22m[2mfocus-visible[22m       [2m | [22m[36m987 bytes[39m[37m[2m | [22m              [36m987 bytes[39m[37m[39m
+[37m[32mchunk-YRVXX3TJ.js[39m[37m    [2m | [22m[2mswipe-back[22m          [2m | [22m[36m818 bytes[39m[37m[2m | [22m              [36m818 bytes[39m[37m[39m
+[37m[32mchunk-XW54MDFR.js[39m[37m    [2m | [22m[2mstatus-tap[22m          [2m | [22m[36m596 bytes[39m[37m[2m | [22m              [36m596 bytes[39m[37m[39m
+[37m[32mchunk-QX5KOKPP.js[39m[37m    [2m | [22m[2mkeyboard2[22m           [2m | [22m[36m410 bytes[39m[37m[2m | [22m              [36m410 bytes[39m[37m[39m
+[37m[32mchunk-PIZMWDDL.js[39m[37m    [2m | [22m[2mhardware-back-button[22m[2m | [22m[36m322 bytes[39m[37m[2m | [22m              [36m322 bytes[39m[37m[39m
+[37m[32mchunk-W2YS2J2L.js[39m[37m    [2m | [22m[2mios-transition[22m      [2m | [22m[36m232 bytes[39m[37m[2m | [22m        [39m[37m      [36m232 bytes[39m[37m[39m
+[37m[32mchunk-FHXYGFUL.js[39m[37m    [2m | [22m[2mmd-transition[22m       [2m | [22m[36m217 bytes[39m[37m[2m | [22m              [36m217 bytes[39m[37m[39m
+[37m[32mchunk-TDWYZUIH.js[39m[37m    [2m | [22m[2mindex3[22m              [2m | [22m[36m138 bytes[39m[37m[2m | [22m              [36m138 bytes[39m[37m[39m
+[37m[39m
+[37mApplication bundle generation complete. [10.755 seconds][39m
+[37m[39m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mThe glob pattern import("./**/*.entry.js*") did not match any files[0m [empty-glob][39m[22m
+[1m[33m[39m[22m
+[1m[33m    node_modules/@stencil/core/internal/client/index.js:173:2:[39m[22m
+[1m[33m[37m      173 │   [32m`./${bundleId}.entry.js${cacheBustParams ? "?" + cacheBustParam[37m...[39m[22m
+[1m[33m          ╵   [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mThe glob pattern import("./**/*.entry.js*") did not match any files[0m [empty-glob][39m[22m
+[1m[33m[39m[22m
+[1m[33m    node_modules/ionicons/node_modules/@stencil/core/internal/client/index.js:3056:2:[39m[22m
+[1m[33m[37m      3056 │   [32m`./${bundleId}.entry.js${BUILD.hotModuleReplacement && hmrVers[37m...[39m[22m
+[1m[33m           ╵   [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mbundle initial exceeded maximum budget. Budget 512.00 kB was not met by 73.07 kB with a total of 585.07 kB.[0m[39m[22m
+[1m[33m[39m[22m
+[1m[33m[39m[22m
+[37mOutput location: C:\Users\kiwij\文件\rag-yt\frontend\dist\frontend[39m
+[37m[39m

@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@ragyt/api-client": ["libs/api-client/src/index.ts"],
+      "@ragyt/api-client/*": ["libs/api-client/src/*"]
+    }
+  }
+}

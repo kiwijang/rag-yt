@@ -1,0 +1,15 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "tailwind-config",
+  "projectType": "library",
+  "sourceRoot": "libs/tailwind-config",
+  "tags": ["scope:shared", "type:config"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo tailwind-config lint not configured"
+      }
+    }
+  }
+}

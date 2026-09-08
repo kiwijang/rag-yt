@@ -1,0 +1,15 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "api-client",
+  "projectType": "library",
+  "sourceRoot": "libs/api-client/src",
+  "tags": ["scope:shared", "type:api-client"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo api-client lint not configured"
+      }
+    }
+  }
+}
