@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using Rag.Api.Data;
 using Rag.Api.Models;
 using Rag.Api.Services;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -89,7 +90,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         NameClaimType = "name",
-        RoleClaimType = "role"
+        RoleClaimType = ClaimTypes.Role
     };
 });
 
