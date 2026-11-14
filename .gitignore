@@ -11,6 +11,8 @@ node_modules/
 .angular/
 dist/
 .npm/
+frontend/.nx/
+.vs/
 
 # Docker
 *.local
@@ -19,3 +21,4 @@ dist/
 .vscode/
 .idea/
 .DS_Store
+
