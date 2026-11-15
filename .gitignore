@@ -6,6 +6,10 @@ obj/
 *.db
 *.sqlite
 
+# Python
+.venv/
+__pycache__/
+
 # Node
 node_modules/
 .angular/
@@ -17,8 +21,14 @@ frontend/.nx/
 # Docker
 *.local
 
+# Local database/file backups contain private data
+/backups/
+
 # IDE
 .vscode/
 .idea/
 .DS_Store
 
+
+# Uploaded private documents
+/Rag.Api/uploads/
