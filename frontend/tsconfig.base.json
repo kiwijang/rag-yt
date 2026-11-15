@@ -2,7 +2,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@ragyt/ui": ["libs/shared/ui/src/index.ts"],
       "@ragyt/api-client": ["libs/api-client/src/index.ts"],
+      "@ragyt/api-client/youtube-transcript": ["libs/api-client/youtube-transcript.service.ts"],
       "@ragyt/api-client/*": ["libs/api-client/src/*"]
     }
   }

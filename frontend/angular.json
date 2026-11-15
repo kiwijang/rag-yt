@@ -25,7 +25,12 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               "apps/frontend/src/favicon.ico",
-              "apps/frontend/src/assets"
+              "apps/frontend/src/assets",
+              {
+                "glob": "**/*",
+                "input": "libs/shared/ui/src/assets/icons",
+                "output": "assets/icons"
+              }
             ],
             "styles": ["apps/frontend/src/styles.scss"],
             "scripts": []
@@ -53,6 +58,12 @@
             }
           },
           "defaultConfiguration": "production"
+        },
+        "download-icons": {
+          "builder": "nx:run-commands",
+          "options": {
+            "command": "node scripts/download-lucide-icons.mjs"
+          }
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",

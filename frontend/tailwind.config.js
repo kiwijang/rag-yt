@@ -2,6 +2,10 @@
 const sharedPreset = require('./libs/tailwind-config/tailwind.preset');
 
 module.exports = {
+  darkMode: 'selector',
   presets: [sharedPreset],
-  content: ['./apps/frontend/src/**/*.{html,ts}'],
+  content: {
+    relative: true,
+    files: ['./apps/frontend/src/**/*.{html,ts}', './libs/shared/ui/src/**/*.{html,ts}'],
+  },
 };
