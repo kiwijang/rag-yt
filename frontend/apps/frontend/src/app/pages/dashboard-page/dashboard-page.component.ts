@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { TranscriptChunkManagerComponent } from './transcript-chunk-manager.component';
+import { PdfDetectionPreviewComponent } from './pdf-detection-preview.component';
 import { Component, ElementRef, ViewChild, computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -44,6 +45,7 @@ type RagItem = {
   imports: [
     CommonModule,
     TranscriptChunkManagerComponent,
+    PdfDetectionPreviewComponent,
     FormsModule,
     HlmButtonDirective,
     HlmInputDirective,
@@ -329,10 +331,12 @@ type RagItem = {
             <h2 id="pdf-chunks-title" class="text-lg font-semibold">PDF RAG 切塊 · 來源 #{{ pdfChunkSourceId() }}</h2>
             <button hlmBtn type="button" variant="outline" size="sm" (click)="pdfChunksDialog.close()">關閉</button>
           </div>
-          <p class="my-3 text-sm">PdfPig 擷取頁面文字；本專案逐頁切塊，每塊最多 900 字元、重疊約 120 字元，優先在句尾或空白切開。點選切塊可在下方原文查看標示範圍。僅支援內嵌文字。</p>
+          <p class="my-3 text-sm">由 Docker MinerU 解析文字與掃描頁面。依版面段落切塊（最多 900 字元、重疊約 120 字元），表格保留完整結構。中繼資料顯示辨識裝置、區塊類型與座標；點選切塊可查看原文範圍。</p>
           <button hlmBtn type="button" variant="outline" size="sm" [disabled]="pdfChunksBusy()" (click)="rebuildPdfChunks()">從原始 PDF 重建切塊</button>
           @if (pdfChunksError()) { <p role="alert" class="my-3 text-red-600 dark:text-red-400">{{ pdfChunksError() }}</p> }
           @if (pdfChunksBusy()) { <p role="status">處理中…</p> }
+          <app-pdf-detection-preview [sourceId]="pdfChunkSourceId()" [pages]="pdfPages()" [chunks]="pdfChunks()"
+            [selectedChunkId]="selectedPdfChunk()" (chunkSelected)="selectedPdfChunk.set($event)" />
           <p class="my-3">共 {{ pdfChunks().length }} 個切塊</p>
           <ol class="grid gap-3">
             @for (chunk of pdfChunks(); track chunk.id) {
@@ -340,7 +344,7 @@ type RagItem = {
                 <button hlmBtn type="button" variant="outline" size="sm" [attr.aria-pressed]="selectedPdfChunk() === chunk.id" (click)="selectedPdfChunk.set(chunk.id)">Chunk #{{ chunk.id }} · 第 {{ pdfChunkPage(chunk.metadataJson) }} 頁 · 原文定位</button><p class="mt-1 break-all text-xs text-slate-500">{{ chunk.metadataJson }}</p>
                 <p class="mt-2 whitespace-pre-wrap break-words text-sm">{{ chunk.content }}</p>
               </li>
-            } @empty { @if (!pdfChunksBusy()) { <li>尚無文字切塊；請上傳含內嵌文字的 PDF 或重建切塊。</li> } }
+            } @empty { @if (!pdfChunksBusy()) { <li>尚無文字切塊；可按「從原始 PDF 重建切塊」辨識掃描頁。</li> } }
           </ol>
           <h3 class="mt-5 font-semibold">頁面原文與切塊範圍對照</h3>
           @for (page of pdfPages(); track page.id) {
@@ -1018,14 +1022,14 @@ export class DashboardPageComponent {
       .pipe(finalize(() => this.setBusy(false)))
       .subscribe({
         next: (result: { chunkCount?: number }) => {
-          this.message.set(result?.chunkCount ? `PDF 已上傳並建立 ${result.chunkCount} 個 RAG 切塊。` : 'PDF 已保存，但找不到內嵌文字，未建立切塊；掃描圖片需要 OCR 引擎。');
+          this.message.set(result?.chunkCount ? `PDF 已上傳並建立 ${result.chunkCount} 個 RAG 切塊。` : 'PDF 已保存，但文字擷取及 OCR 未找到可辨識文字，未建立切塊。');
           this.pdfName.set('');
           this.pdfDescription.set('');
           this.selectedPdfFile.set(null);
           this.loadSources();
 
         },
-        error: () => this.errorMessage.set('PDF upload/OCR failed.'),
+        error: (error: unknown) => this.errorMessage.set(this.getApiMessage(error, 'PDF 上傳或 OCR 失敗。')),
       });
   }
 

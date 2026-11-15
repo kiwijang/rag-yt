@@ -12,6 +12,15 @@ export interface SyncedYoutubeVideo {
   durationSeconds?: number | null;
 }
 
+export interface PdfTextDetection {
+  id: number; polygon: number[][]; text: string; confidence: number | null;
+}
+export interface PdfPageOverlay {
+  pdfPageId: number; pageNumber: number; width: number; height: number; device: string;
+  imageBase64: string; detections: PdfTextDetection[];
+  layoutBlocks: { type: string; bbox: number[] }[];
+}
+
 export interface TranscriptBatch {
   id: string;
   finished: number;
@@ -88,6 +97,12 @@ export interface TranscriptDeletionPreview {
 export class YoutubeTranscriptService {
   private readonly http = inject(HttpClient);
   private readonly url = '/api/SourceManagement/youtube/{id}/transcripts';
+
+  pdfPageOverlay(id: number, pageNumber: number) {
+    return request<PdfPageOverlay>(OpenAPI, this.http, {
+      method: 'GET', url: '/api/SourceManagement/pdf/{id}/pages/{pageNumber}/overlay', path: { id, pageNumber },
+    });
+  }
 
   pdfPages(id: number) {
     return request<{ id: number; pageNumber: number; text: string }[]>(OpenAPI, this.http, {
