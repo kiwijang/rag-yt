@@ -107,6 +107,8 @@ builder.Services.AddHostedService(services => services.GetRequiredService<GpuInf
 builder.Services.AddSingleton<YoutubeTranscriptQueue>();
 builder.Services.AddHostedService(services => services.GetRequiredService<YoutubeTranscriptQueue>());
 builder.Services.AddScoped<PdfOcrService>();
+builder.Services.AddSingleton<PdfLayoutInferenceService>();
+builder.Services.AddHttpClient("MinerU", client => client.Timeout = Timeout.InfiniteTimeSpan);
 builder.Services.AddScoped<RagSearchService>();
 
 builder.Services.AddCors(options =>

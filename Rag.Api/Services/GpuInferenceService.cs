@@ -17,6 +17,18 @@ public sealed class GpuInferenceService(IConfiguration configuration, IHostEnvir
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask; // Lazy: no model download on API startup.
+
+    public async Task<T> WithExternalInferenceAsync<T>(Func<Task<T>> action, CancellationToken token)
+    {
+        await gate.WaitAsync(token);
+        try
+        {
+            // Serializing alone is insufficient: cached Whisper/NLLB weights still occupy CUDA memory.
+            await ResetAsync();
+            return await action();
+        }
+        finally { gate.Release(); }
+    }
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         // ApplicationStopping cancels an active request; killing also unblocks a stalled native inference.

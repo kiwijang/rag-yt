@@ -258,20 +258,19 @@ public class SourceManagementController : ControllerBase
         if (!request.File.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
             return BadRequest(new { message = "Only PDF files are supported." });
 
-        var (source, chunkCount) = await _pdfOcrService.UploadAndIngestAsync(
-            request.Name,
-            request.Description,
-            request.File,
-            cancellationToken);
-
-        return Ok(new
+        try
         {
-            source,
-            chunkCount
-        });
+            var (source, chunkCount) = await _pdfOcrService.UploadAndIngestAsync(
+                request.Name, request.Description, request.File, cancellationToken);
+            return Ok(new
+            {
+                source = new { source.Id, source.Name, source.FileName, source.Url, source.Description, source.IsActive, source.Status, source.CreatedAt, source.UpdatedAt },
+                chunkCount
+            });
+        }
+        catch (InvalidOperationException error) { return UnprocessableEntity(new { message = error.Message }); }
     }
 
-    /// <summary>List stored PDF RAG chunks, including page and chunking metadata.</summary>
     /// <summary>Read persisted PDF page text for comparing chunk boundaries and overlap.</summary>
     [HttpGet("pdf/{id:int}/pages")]
     public async Task<IActionResult> GetPdfPages(int id, CancellationToken token)
@@ -280,12 +279,38 @@ public class SourceManagementController : ControllerBase
         return Ok(await _db.PdfPages.AsNoTracking().Where(x => x.PdfSourceId == id)
             .OrderBy(x => x.PageNumber).Select(x => new { x.Id, x.PageNumber, x.Text }).ToListAsync(token));
     }
+    /// <summary>List stored PDF RAG chunks, including page and chunking metadata.</summary>
     [HttpGet("pdf/{id:int}/chunks")]
     public async Task<IActionResult> GetPdfChunks(int id, CancellationToken token)
     {
         if (!await _db.PdfSources.AnyAsync(x => x.Id == id, token)) return NotFound();
         return Ok(await _db.RagDocumentChunks.AsNoTracking().Where(x => x.SourceType == SourceType.Pdf && x.SourceId == id)
             .OrderBy(x => x.Id).Select(x => new { x.Id, x.Content, x.MetadataJson, x.PdfPageId }).ToListAsync(token));
+    }
+
+    /// <summary>Read an authenticated OCR page preview and aligned text-detection polygons.</summary>
+    [HttpGet("pdf/{id:int}/pages/{pageNumber:int}/overlay")]
+    public async Task<IActionResult> GetPdfPageOverlay(int id, int pageNumber,
+        [FromServices] IWebHostEnvironment environment, CancellationToken token)
+    {
+        var page = await _db.PdfPages.AsNoTracking().SingleOrDefaultAsync(x => x.PdfSourceId == id && x.PageNumber == pageNumber, token);
+        if (page is null) return NotFound();
+        var metadata = await _db.RagDocumentChunks.AsNoTracking().Where(x => x.PdfPageId == page.Id && x.PdfSourceId == id)
+            .Select(x => x.MetadataJson).FirstOrDefaultAsync(token);
+        var root = System.Text.Json.Nodes.JsonNode.Parse(metadata ?? "{}");
+        var asset = root?["ocrAssetId"]?.GetValue<string>();
+        if (!Guid.TryParseExact(asset, "N", out _))
+            return Conflict(new { message = "此頁尚無文字框預覽；舊資料請用 MinerU 重新建立切塊。沒有文字切塊的空白頁不提供文字框。" });
+        var directory = Path.Combine(environment.ContentRootPath, "uploads", "pdf", "ocr", asset!);
+        var image = Path.Combine(directory, $"page-{pageNumber}.png");
+        var geometry = Path.Combine(directory, $"page-{pageNumber}.json");
+        if (!System.IO.File.Exists(image) || !System.IO.File.Exists(geometry))
+            return Conflict(new { message = "OCR 預覽檔缺失，請從備份還原預覽檔或重新建立 OCR 切塊。" });
+        var result = System.Text.Json.Nodes.JsonNode.Parse(await System.IO.File.ReadAllTextAsync(geometry, token))!;
+        result["imageBase64"] = Convert.ToBase64String(await System.IO.File.ReadAllBytesAsync(image, token));
+        result["pdfPageId"] = page.Id;
+        Response.Headers.CacheControl = "no-store";
+        return Ok(result);
     }
 
     /// <summary>Rebuild chunks from the uploaded PDF. Replaces only this PDF's search chunks.</summary>

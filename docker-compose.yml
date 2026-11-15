@@ -1,4 +1,26 @@
 services:
+  mineru:
+    build: ./services/mineru
+    image: ragyt-mineru:2.7.6
+    container_name: ragyt-mineru
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8090:8000"
+    gpus: all
+    shm_size: 2gb
+    environment:
+      MINERU_MODEL_SOURCE: huggingface
+      MINERU_FORMULA_ENABLE: "false"
+      MINERU_TABLE_ENABLE: "true"
+      MINERU_VIRTUAL_VRAM_SIZE: "8"
+    volumes:
+      - mineru_models:/models
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=10)"]
+      interval: 15s
+      timeout: 15s
+      retries: 8
+      start_period: 60s
   postgres:
     image: postgres:16
     container_name: ragyt-postgres
@@ -41,5 +63,6 @@ services:
       SWAGGER_JSON_URL: https://raw.githubusercontent.com/weaviate/weaviate/master/openapi-specs/schema.json
 
 volumes:
+  mineru_models:
   postgres_data:
   weaviate_data:

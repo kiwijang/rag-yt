@@ -1,0 +1,4 @@
+mineru[pipeline,api]==2.7.6
+torch==2.7.1
+torchvision==0.22.1
+transformers==4.57.6
