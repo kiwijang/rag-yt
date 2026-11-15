@@ -32,8 +32,15 @@ public class RagSearchService
         }
 
         q = q.Where(x => EF.Functions.ILike(x.Content, $"%{query}%"));
+        q = q.Where(x => x.YoutubeTranscriptSegmentId == null ||
+            !_db.YoutubeTranscripts.Any(transcript =>
+                transcript.YoutubeSourceId == x.SourceId &&
+                transcript.VideoId == x.YoutubeTranscriptSegment!.YoutubeTranscript.VideoId &&
+                transcript.Id > x.YoutubeTranscriptSegment.YoutubeTranscriptId));
 
         var rows = await q
+            .Include(x => x.YoutubeTranscriptSegment)
+            .ThenInclude(segment => segment!.YoutubeTranscript)
             .OrderByDescending(x => x.CreatedAt)
             .Take(300)
             .ToListAsync(cancellationToken);
@@ -42,24 +49,50 @@ public class RagSearchService
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
-        var ranked = rows
-            .Select(x => new
-            {
-                x.Id,
-                x.SourceType,
-                x.SourceId,
-                x.SourceName,
-                Snippet = BuildSnippet(x.Content, query),
-                Score = ScoreText(x.Content, keywords),
-                x.CreatedAt
-            })
-            .OrderByDescending(x => x.Score)
-            .ThenByDescending(x => x.CreatedAt)
-            .Take(take)
-            .Cast<object>()
-            .ToList();
+        var ranked = rows.Select(chunk => (Chunk: chunk, Score: ScoreText(chunk.Content, keywords)))
+            .OrderByDescending(hit => hit.Score).ThenByDescending(hit => hit.Chunk.CreatedAt)
+            .Take(take).ToArray();
+        var transcriptIds = ranked.Select(hit => hit.Chunk.YoutubeTranscriptSegment?.YoutubeTranscriptId)
+            .OfType<int>().Distinct().ToArray();
+        var neighbors = transcriptIds.Length == 0 ? [] : await _db.RagDocumentChunks.AsNoTracking()
+            .Where(chunk => chunk.YoutubeTranscriptSegment != null &&
+                transcriptIds.Contains(chunk.YoutubeTranscriptSegment.YoutubeTranscriptId))
+            .Include(chunk => chunk.YoutubeTranscriptSegment)
+            .OrderBy(chunk => chunk.YoutubeTranscriptSegment!.Sequence)
+            .ToListAsync(cancellationToken);
+        var byVersion = neighbors.ToLookup(chunk => chunk.YoutubeTranscriptSegment!.YoutubeTranscriptId);
+        var positions = byVersion.SelectMany(group => group.Select((chunk, index) => (chunk.Id, index)))
+            .ToDictionary(item => item.Id, item => item.index);
+        var chunksByVersion = byVersion.ToDictionary(group => group.Key, group => group.ToArray());
 
-        return ranked;
+        return ranked.Select(hit =>
+        {
+            var chunk = hit.Chunk;
+            var segment = chunk.YoutubeTranscriptSegment;
+            RagDocumentChunk[] context = [chunk];
+            if (segment is not null && positions.TryGetValue(chunk.Id, out var index))
+            {
+                var version = chunksByVersion[segment.YoutubeTranscriptId];
+                context = version[Math.Max(0, index - 1)..Math.Min(version.Length, index + 2)];
+            }
+
+            return (object)new
+            {
+                chunk.Id, chunk.SourceType, chunk.SourceId, chunk.SourceName,
+                Snippet = segment is null ? BuildSnippet(chunk.Content, query) :
+                    string.Join("\n", context.Select(item => item.Content)),
+                hit.Score,
+                VideoId = segment?.YoutubeTranscript.VideoId,
+                VideoUrl = segment is null ? null :
+                    $"https://www.youtube.com/watch?v={segment.YoutubeTranscript.VideoId}&t={(long)segment.StartSeconds}s",
+                TranscriptId = segment?.YoutubeTranscriptId,
+                StartSeconds = segment?.StartSeconds,
+                EndSeconds = segment is null ? (double?)null : YoutubeSearchChunks.EndSeconds(chunk),
+                ContextStartSeconds = segment is null ? (double?)null : context[0].YoutubeTranscriptSegment!.StartSeconds,
+                ContextEndSeconds = segment is null ? (double?)null : context.Max(YoutubeSearchChunks.EndSeconds),
+                chunk.CreatedAt
+            };
+        }).ToList();
     }
 
     private static int ScoreText(string content, string[] keywords)

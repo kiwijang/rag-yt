@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Update="Scripts/inference_worker.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Duende.IdentityServer" Version="7.0.8" />
     <PackageReference Include="Duende.IdentityServer.AspNetIdentity" Version="7.0.8" />
     <PackageReference Include="Duende.IdentityServer.EntityFramework" Version="7.0.8" />

@@ -95,46 +95,111 @@ public class SourceManagementController : ControllerBase
         var source = await _db.YoutubeSources.FindAsync(id);
         if (source == null) return NotFound();
 
+        _db.RagDocumentChunks.RemoveRange(_db.RagDocumentChunks.Where(x =>
+            x.SourceType == SourceType.YouTube && x.SourceId == id && x.YoutubeTranscriptSegmentId == null));
         _db.YoutubeSources.Remove(source);
         await _db.SaveChangesAsync();
         return Ok(new { message = "YouTube source deleted." });
     }
 
-    [HttpPost("youtube/{id:int}/sync")]
-    public async Task<IActionResult> SyncYoutubeSource(int id, [FromBody] SyncYoutubeSourceRequest request, CancellationToken cancellationToken)
+    [HttpGet("youtube/{id:int}/videos")]
+    public async Task<IActionResult> GetYoutubeVideos(int id, CancellationToken cancellationToken)
     {
-        var source = await _db.YoutubeSources.FindAsync(id);
-        if (source == null) return NotFound();
+        if (!await _db.YoutubeSources.AnyAsync(x => x.Id == id, cancellationToken))
+            return NotFound();
 
-        var mode = string.Equals(request.Mode, "video", StringComparison.OrdinalIgnoreCase)
-            ? YoutubeSyncMode.Video
-            : YoutubeSyncMode.Channel;
+        return Ok(await _youtubeSyncService.GetVideosAsync(id, cancellationToken));
+    }
+
+    [HttpPost("youtube/{id:int}/videos/enrich-metadata")]
+    public async Task<IActionResult> EnrichYoutubeMetadata(int id, CancellationToken cancellationToken)
+    {
+        if (!await _db.YoutubeSources.AnyAsync(x => x.Id == id, cancellationToken)) return NotFound();
+        return Accepted(await _youtubeSyncService.EnrichMissingAsync(id, cancellationToken));
+    }
+
+    [HttpPost("youtube/{id:int}/videos/{videoId}/check-access")]
+    public async Task<IActionResult> CheckYoutubeVideoAccess(
+        int id, string videoId, CancellationToken cancellationToken)
+    {
+        if (YoutubeTranscriptionService.GetVideoId($"https://youtu.be/{videoId}") != videoId)
+            return BadRequest(new { message = "Enter a valid YouTube video ID." });
 
         try
         {
-            var count = await _youtubeSyncService.SyncAsync(source, mode, request.Take, cancellationToken);
-            source.Status = SourceStatus.Active;
-            source.UpdatedAt = DateTime.UtcNow;
-            await _db.SaveChangesAsync(cancellationToken);
+            var video = await _youtubeSyncService.CheckAccessAsync(id, videoId, cancellationToken);
+            return video is null ? NotFound(new { message = "Video is missing from the synchronized list." }) : Ok(video);
+        }
+        catch (YoutubeListingException ex)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway, new { message = ex.Message });
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(StatusCodes.Status504GatewayTimeout, new { message = "The access check timed out." });
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway, new { message = "YouTube returned unreadable metadata." });
+        }
+    }
+
+    [HttpPost("youtube/{id:int}/sync")]
+    public async Task<IActionResult> SyncYoutubeSource(int id, [FromBody] SyncYoutubeSourceRequest request, CancellationToken cancellationToken)
+    {
+        var source = await _db.YoutubeSources.FindAsync([id], cancellationToken);
+        if (source is null)
+            return NotFound(new { message = "This YouTube source no longer exists. Refresh the source list and try again." });
+
+        var mode = request.Mode?.Trim().ToLowerInvariant() switch
+        {
+            "video" => YoutubeSyncMode.Video,
+            "channel" => YoutubeSyncMode.Channel,
+            _ => (YoutubeSyncMode?)null
+        };
+
+        if (mode is null)
+            return BadRequest(new { message = "Choose either channel or video sync." });
+
+        if (mode == YoutubeSyncMode.Video && YoutubeTranscriptionService.GetVideoId(source.Url) is null)
+            mode = YoutubeSyncMode.Channel;
+
+        if (mode == YoutubeSyncMode.Channel && YoutubeSyncService.GetChannelUrl(source) is null)
+            return BadRequest(new
+            {
+                message = "Enter a single video URL, a YouTube channel URL such as youtube.com/@handle, or a valid UC channel ID."
+            });
+
+        try
+        {
+            var videos = await _youtubeSyncService.SyncAsync(source, mode.Value, cancellationToken);
 
             return Ok(new
             {
                 sourceId = source.Id,
-                syncedChunks = count,
+                syncedChunks = videos.Count,
+                videos,
                 mode = mode.ToString()
             });
         }
-        catch (Exception ex)
+        catch (YoutubeListingException ex)
         {
-            source.Status = SourceStatus.Error;
-            source.UpdatedAt = DateTime.UtcNow;
-            await _db.SaveChangesAsync(cancellationToken);
-
-            return BadRequest(new
-            {
-                message = "YouTube sync failed.",
-                error = ex.Message
-            });
+            return StatusCode(StatusCodes.Status502BadGateway, new { message = ex.Message });
+        }
+        catch (HttpRequestException ex)
+        {
+            var message = ex.StatusCode is { } status
+                ? $"YouTube returned HTTP {(int)status} while syncing {mode.Value.ToString().ToLowerInvariant()} metadata. Check that the source is publicly accessible."
+                : "The API could not connect to YouTube. Check the server's network connection.";
+            return StatusCode(StatusCodes.Status502BadGateway, new { message });
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(StatusCodes.Status504GatewayTimeout, new { message = "The YouTube metadata lookup timed out. Retry the sync." });
+        }
+        catch (Exception ex) when (ex is System.Text.Json.JsonException)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway, new { message = "YouTube returned unreadable metadata." });
         }
     }
 
@@ -206,6 +271,33 @@ public class SourceManagementController : ControllerBase
         });
     }
 
+    /// <summary>List stored PDF RAG chunks, including page and chunking metadata.</summary>
+    /// <summary>Read persisted PDF page text for comparing chunk boundaries and overlap.</summary>
+    [HttpGet("pdf/{id:int}/pages")]
+    public async Task<IActionResult> GetPdfPages(int id, CancellationToken token)
+    {
+        if (!await _db.PdfSources.AnyAsync(x => x.Id == id, token)) return NotFound();
+        return Ok(await _db.PdfPages.AsNoTracking().Where(x => x.PdfSourceId == id)
+            .OrderBy(x => x.PageNumber).Select(x => new { x.Id, x.PageNumber, x.Text }).ToListAsync(token));
+    }
+    [HttpGet("pdf/{id:int}/chunks")]
+    public async Task<IActionResult> GetPdfChunks(int id, CancellationToken token)
+    {
+        if (!await _db.PdfSources.AnyAsync(x => x.Id == id, token)) return NotFound();
+        return Ok(await _db.RagDocumentChunks.AsNoTracking().Where(x => x.SourceType == SourceType.Pdf && x.SourceId == id)
+            .OrderBy(x => x.Id).Select(x => new { x.Id, x.Content, x.MetadataJson, x.PdfPageId }).ToListAsync(token));
+    }
+
+    /// <summary>Rebuild chunks from the uploaded PDF. Replaces only this PDF's search chunks.</summary>
+    [HttpPost("pdf/{id:int}/chunks/rebuild")]
+    public async Task<IActionResult> RebuildPdfChunks(int id, CancellationToken token)
+    {
+        var source = await _db.PdfSources.SingleOrDefaultAsync(x => x.Id == id, token);
+        if (source is null) return NotFound();
+        try { return Ok(new { chunkCount = await _pdfOcrService.RebuildAsync(source, token) }); }
+        catch (FileNotFoundException) { return NotFound(new { message = "Original uploaded PDF is unavailable; upload the document first." }); }
+        catch (InvalidOperationException error) { return UnprocessableEntity(new { message = error.Message }); }
+    }
     [HttpPut("pdf/{id:int}")]
     public async Task<IActionResult> UpdatePdfSource(int id, [FromBody] UpdatePdfSourceRequest request)
     {

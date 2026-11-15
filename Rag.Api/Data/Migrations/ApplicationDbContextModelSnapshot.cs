@@ -231,6 +231,32 @@ namespace Rag.Api.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Rag.Api.Models.PdfPage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PageNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PdfSourceId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PdfSourceId", "PageNumber")
+                        .IsUnique();
+
+                    b.ToTable("PdfPages");
+                });
+
             modelBuilder.Entity("Rag.Api.Models.PdfSource", b =>
                 {
                     b.Property<int>("Id")
@@ -294,6 +320,12 @@ namespace Rag.Api.Data.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<int?>("PdfPageId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("PdfSourceId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("SourceId")
                         .HasColumnType("integer");
 
@@ -305,9 +337,19 @@ namespace Rag.Api.Data.Migrations
                     b.Property<int>("SourceType")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("YoutubeTranscriptSegmentId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("PdfPageId");
+
+                    b.HasIndex("PdfSourceId");
+
+                    b.HasIndex("YoutubeTranscriptSegmentId")
+                        .IsUnique();
 
                     b.HasIndex("SourceType", "SourceId");
 
@@ -365,6 +407,99 @@ namespace Rag.Api.Data.Migrations
                     b.ToTable("YoutubeSources");
                 });
 
+            modelBuilder.Entity("Rag.Api.Models.YoutubeTranscript", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double?>("DownloadSeconds")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("EngineVersion")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Origin")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<double?>("ProcessingSeconds")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("TranscriptionSeconds")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("TranslationSeconds")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("VideoId")
+                        .IsRequired()
+                        .HasMaxLength(11)
+                        .HasColumnType("character varying(11)");
+
+                    b.Property<int>("YoutubeSourceId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("YoutubeSourceId", "VideoId", "Id");
+
+                    b.ToTable("YoutubeTranscripts");
+                });
+
+            modelBuilder.Entity("Rag.Api.Models.YoutubeTranscriptSegment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("EndSeconds")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("StartSeconds")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TraditionalChineseText")
+                        .HasColumnType("text");
+
+                    b.Property<int>("YoutubeTranscriptId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("YoutubeTranscriptId", "Sequence")
+                        .IsUnique();
+
+                    b.ToTable("YoutubeTranscriptSegments");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -414,6 +549,80 @@ namespace Rag.Api.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Rag.Api.Models.PdfPage", b =>
+                {
+                    b.HasOne("Rag.Api.Models.PdfSource", "PdfSource")
+                        .WithMany("Pages")
+                        .HasForeignKey("PdfSourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PdfSource");
+                });
+
+            modelBuilder.Entity("Rag.Api.Models.RagDocumentChunk", b =>
+                {
+                    b.HasOne("Rag.Api.Models.PdfPage", "PdfPage")
+                        .WithMany("Chunks")
+                        .HasForeignKey("PdfPageId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Rag.Api.Models.PdfSource", "PdfSource")
+                        .WithMany("Chunks")
+                        .HasForeignKey("PdfSourceId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Rag.Api.Models.YoutubeTranscriptSegment", "YoutubeTranscriptSegment")
+                        .WithOne()
+                        .HasForeignKey("Rag.Api.Models.RagDocumentChunk", "YoutubeTranscriptSegmentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("PdfPage");
+
+                    b.Navigation("PdfSource");
+
+                    b.Navigation("YoutubeTranscriptSegment");
+                });
+
+            modelBuilder.Entity("Rag.Api.Models.YoutubeTranscript", b =>
+                {
+                    b.HasOne("Rag.Api.Models.YoutubeSource", "YoutubeSource")
+                        .WithMany()
+                        .HasForeignKey("YoutubeSourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("YoutubeSource");
+                });
+
+            modelBuilder.Entity("Rag.Api.Models.YoutubeTranscriptSegment", b =>
+                {
+                    b.HasOne("Rag.Api.Models.YoutubeTranscript", "YoutubeTranscript")
+                        .WithMany("Segments")
+                        .HasForeignKey("YoutubeTranscriptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("YoutubeTranscript");
+                });
+
+            modelBuilder.Entity("Rag.Api.Models.PdfPage", b =>
+                {
+                    b.Navigation("Chunks");
+                });
+
+            modelBuilder.Entity("Rag.Api.Models.PdfSource", b =>
+                {
+                    b.Navigation("Chunks");
+
+                    b.Navigation("Pages");
+                });
+
+            modelBuilder.Entity("Rag.Api.Models.YoutubeTranscript", b =>
+                {
+                    b.Navigation("Segments");
                 });
 #pragma warning restore 612, 618
         }

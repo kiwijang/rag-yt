@@ -96,6 +96,16 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 builder.Services.AddHttpClient<YoutubeSyncService>();
+builder.Services.AddScoped<YoutubeTranscriptionService>();
+builder.Services.AddScoped<TranscriptChunkManagementService>();
+builder.Services.AddSingleton<YoutubeMediaService>();
+builder.Services.AddScoped<YoutubeVideoMetadataStore>();
+builder.Services.AddSingleton<YoutubeMetadataQueue>();
+builder.Services.AddHostedService(services => services.GetRequiredService<YoutubeMetadataQueue>());
+builder.Services.AddSingleton<GpuInferenceService>();
+builder.Services.AddHostedService(services => services.GetRequiredService<GpuInferenceService>());
+builder.Services.AddSingleton<YoutubeTranscriptQueue>();
+builder.Services.AddHostedService(services => services.GetRequiredService<YoutubeTranscriptQueue>());
 builder.Services.AddScoped<PdfOcrService>();
 builder.Services.AddScoped<RagSearchService>();
 
@@ -117,13 +127,13 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "RAG YT API",
         Version = "v1",
-        Description = "Backend API for RAG YT source management and authentication."
+        Description = "使用順序：登入取得 accessToken → Authorize → 建立來源 → 同步影片清單 → 讀取逐字稿或建立背景批次 → 輪詢進度 → 搜尋片段。管理操作需 Admin。各端點包含用途、用法及資料影響；Execute 會實際執行操作。"
     });
 
     var jwtSecurityScheme = new OpenApiSecurityScheme
     {
         Name = "Authorization",
-        Description = "Input only your JWT token in this format: Bearer {token}",
+        Description = "先呼叫 POST /api/Auth/login，再貼上 accessToken 本身；Swagger 自動加入 Bearer 前綴。",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
         Scheme = "bearer",
@@ -136,13 +146,8 @@ builder.Services.AddSwaggerGen(options =>
     };
 
     options.AddSecurityDefinition("Bearer", jwtSecurityScheme);
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            jwtSecurityScheme,
-            Array.Empty<string>()
-        }
-    });
+    options.OperationFilter<Rag.Api.OpenApi.ApiDocumentationFilter>();
+    options.SchemaFilter<Rag.Api.OpenApi.RequestDocumentationFilter>();
 });
 
 var app = builder.Build();

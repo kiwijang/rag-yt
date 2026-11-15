@@ -37,6 +37,8 @@ public class YoutubeSource
 
 public class PdfSource
 {
+    public ICollection<PdfPage> Pages { get; set; } = new List<PdfPage>();
+    public ICollection<RagDocumentChunk> Chunks { get; set; } = new List<RagDocumentChunk>();
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string FileName { get; set; } = string.Empty;
@@ -48,6 +50,16 @@ public class PdfSource
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
 
+public class PdfPage
+{
+    public int Id { get; set; }
+    public int PdfSourceId { get; set; }
+    public PdfSource PdfSource { get; set; } = null!;
+    public int PageNumber { get; set; }
+    public string Text { get; set; } = string.Empty;
+    public ICollection<RagDocumentChunk> Chunks { get; set; } = new List<RagDocumentChunk>();
+}
+
 public class RagDocumentChunk
 {
     public int Id { get; set; }
@@ -56,5 +68,11 @@ public class RagDocumentChunk
     public string SourceName { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public string? MetadataJson { get; set; }
+    public int? PdfSourceId { get; set; }
+    public PdfSource? PdfSource { get; set; }
+    public int? PdfPageId { get; set; }
+    public PdfPage? PdfPage { get; set; }
+    public int? YoutubeTranscriptSegmentId { get; set; }
+    public YoutubeTranscriptSegment? YoutubeTranscriptSegment { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
