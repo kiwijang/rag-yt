@@ -7,7 +7,7 @@ This workspace contains a full-stack starter for a RAG system with:
 - Duende IdentityServer + ASP.NET Core Identity
 - PostgreSQL for relational data
 - Weaviate for vector search
-- PDF OCR/data ingestion and YouTube source management skeletons
+- Local MinerU scanned-PDF ingestion and YouTube source management
 
 ## Stack
 
@@ -210,7 +210,7 @@ again. There are no database schema changes for this feature.
 
 ## Notes
 
-This starter is designed for local development and extension. For production, add HTTPS certs, secret management, a real OCR provider, and actual YouTube MCP integration.
+This starter is designed for local development and extension. For production, add HTTPS certs, secret management, and deployment monitoring. Local PDF OCR setup, GPU scheduling, chunking and verification are documented in [PDF OCR](docs/pdf-ocr.md).
 
 ### 影片分類與長度補查
 

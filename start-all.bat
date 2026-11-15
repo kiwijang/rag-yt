@@ -69,6 +69,13 @@ function Test-Port([int]$Port) {
     return [bool](Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue)
 }
 
+function Test-OcrEnvironment {
+    try {
+        $health = Invoke-RestMethod ($env:PdfOcr__ServiceUrl.TrimEnd('/') + '/health') -TimeoutSec 15
+        Write-Host "MinerU $($health.version); CUDA available: $($health.cudaAvailable)"
+        return ($health.engine -eq 'MinerU' -and ($env:PdfOcr__Device -ne 'gpu' -or $health.cudaAvailable))
+    } catch { return $false }
+}
 try {
     Set-Location -LiteralPath $projectRoot
     foreach ($tool in @('docker.exe', 'dotnet.exe', 'node.exe', 'npm.cmd', 'yt-dlp', 'ffmpeg')) {
@@ -83,6 +90,12 @@ try {
     $env:VIRTUAL_ENV = Join-Path $projectRoot '.venv'
     $env:PATH = (Join-Path $env:VIRTUAL_ENV 'Scripts') + ';' + $env:PATH
     $env:Transcription__PythonExecutable = $pythonPath
+    if (-not $env:PdfOcr__ServiceUrl) { $env:PdfOcr__ServiceUrl = 'http://127.0.0.1:8090' }
+    if (-not $env:PdfOcr__Device) { $env:PdfOcr__Device = 'auto' }
+    $composeArguments = @('compose','-f',(Join-Path $projectRoot 'docker-compose.yml'))
+    if ($env:PdfOcr__Device -eq 'cpu' -or ($env:PdfOcr__Device -eq 'auto' -and !(Get-Command nvidia-smi -ErrorAction SilentlyContinue))) {
+        $composeArguments += @('-f',(Join-Path $projectRoot 'docker-compose.mineru-cpu.yml'))
+    }
     if (-not $env:Transcription__JsRuntime) {
         $env:Transcription__JsRuntime = 'node:' + (Get-Command node.exe).Source
     }
@@ -95,16 +108,26 @@ try {
         Write-Host "Angular ready: $(Test-Ready 'http://127.0.0.1:4200')"
         & $pythonPath -c "import torch; print('PyTorch:', torch.__version__, 'CUDA available:', torch.cuda.is_available())"
         if ($LASTEXITCODE -ne 0) { throw 'Python inference dependency check failed; install Scripts/requirements-gpu.txt.' }
+        Write-Host "MinerU URL: $env:PdfOcr__ServiceUrl"
+        Write-Host "OCR requested device: $env:PdfOcr__Device"
+        if (-not (Test-OcrEnvironment)) { throw 'MinerU health check failed. Start Docker Desktop and run start-all.bat without --check.' }
         Write-Host 'Prerequisite checks passed. No services were started.'
         exit 0
     }
 
+    # Build/check MinerU before stopping the existing API.
+    Write-Host '[0/3] Preparing MinerU Docker OCR...'
+    if ($env:PdfOcr__ServiceUrl -eq 'http://127.0.0.1:8090') {
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $projectRoot 'scripts\setup-pdf-ocr.ps1') -Device $env:PdfOcr__Device
+        if ($LASTEXITCODE -ne 0) { throw 'MinerU setup failed. The existing API was not stopped.' }
+    }
+    if (-not (Test-OcrEnvironment)) { throw 'MinerU service is unavailable. The existing API was not stopped.' }
     Stop-ExistingApi
     New-Item -ItemType Directory -Force -Path $logDir | Out-Null
     Write-Host '[1/3] Starting Docker services...'
     & docker.exe info *> $null
     if ($LASTEXITCODE -ne 0) { throw 'Docker is unavailable. Start Docker Desktop, then run this file again.' }
-    & docker.exe compose -f (Join-Path $projectRoot 'docker-compose.yml') up -d --wait --wait-timeout 120
+    & docker.exe @composeArguments up -d --wait --wait-timeout 180
     if ($LASTEXITCODE -ne 0) { throw 'Docker Compose startup failed; see the Docker output above.' }
 
     Write-Host '[2/3] Starting Angular...'
