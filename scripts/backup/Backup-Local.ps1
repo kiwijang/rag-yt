@@ -27,7 +27,13 @@ try {
     $files = Join-Path $folder 'pdf'
     New-Item -ItemType Directory -Path $files | Out-Null
     if (Test-Path -LiteralPath $uploads) {
-        Get-ChildItem -LiteralPath $uploads -File | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $files }
+        Get-ChildItem -LiteralPath $uploads -Recurse | Where-Object { $_.Attributes -band [IO.FileAttributes]::ReparsePoint } | ForEach-Object { throw 'PDF upload tree contains a link; refusing to follow it during backup.' }
+        Get-ChildItem -LiteralPath $uploads -Recurse -File | ForEach-Object {
+            $relative = $_.FullName.Substring($uploads.Length + 1)
+            $destination = Join-Path $files $relative
+            New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destination) | Out-Null
+            Copy-Item -LiteralPath $_.FullName -Destination $destination
+        }
     }
     Copy-Item -LiteralPath (Join-Path $projectRoot 'Rag.Api/Data/Migrations') -Destination (Join-Path $folder 'migrations') -Recurse
     $version = Invoke-BackupSql $Container $User $Database 'SHOW server_version;'

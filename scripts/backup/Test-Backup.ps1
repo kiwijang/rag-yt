@@ -43,8 +43,23 @@ UNION ALL SELECT 'TranscriptTimingRows',count(*) FROM "YoutubeTranscripts" WHERE
     })
     $missing = @($pdfs | Where-Object { [IO.Path]::GetFileName($_) -ne $_ -or !(Test-Path -LiteralPath (Join-Path (Join-Path $BackupPath 'pdf') $_) -PathType Leaf) })
     if ($missing.Count) { throw "PDF files missing from backup ($($missing.Count)): $($missing -join ', '). Restore test is not complete." }
+    $assets = @(Invoke-BackupSql $Container $User $name @'
+SELECT DISTINCT "MetadataJson"::jsonb->>'ocrAssetId', "MetadataJson"::jsonb->>'page'
+FROM "RagDocumentChunks" WHERE "SourceType"=2 AND "MetadataJson" IS NOT NULL
+AND "MetadataJson"::jsonb->>'ocrAssetId' IS NOT NULL;
+'@)
+    foreach ($asset in $assets) {
+        $parts = $asset.Split('|')
+        if ($parts.Count -ne 2 -or $parts[0] -notmatch '^[a-f0-9]{32}$' -or $parts[1] -notmatch '^[1-9][0-9]*$') { throw 'Invalid OCR asset reference.' }
+        $assetDirectory = Join-Path (Join-Path $BackupPath 'pdf/ocr') $parts[0]
+        foreach ($extension in @('png','json')) {
+            if (!(Test-Path -LiteralPath (Join-Path $assetDirectory "page-$($parts[1]).$extension") -PathType Leaf)) {
+                throw "OCR preview missing from backup: $asset"
+            }
+        }
+    }
     [ordered]@{ status='passed'; testedUtc=[DateTime]::UtcNow.ToString('o'); isolatedDatabase=$name;
-        manifestSha256=$marker.manifestSha256; rowCounts=$stats; migrationHistory=$history; uploadedPdfFiles=$pdfs.Count } |
+        manifestSha256=$marker.manifestSha256; rowCounts=$stats; migrationHistory=$history; uploadedPdfFiles=$pdfs.Count; ocrPreviewPages=$assets.Count } |
         ConvertTo-Json -Depth 6 | Set-Content (Join-Path $BackupPath 'restore-test.json') -Encoding UTF8
     Write-Host 'PASS: archive restored in isolated database; schema, timing history and PDF files verified.'
     $stats | Write-Host

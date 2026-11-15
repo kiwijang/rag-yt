@@ -157,3 +157,7 @@ powershell.exe -NoProfile -File .\scripts\backup\Backup-And-Verify.ps1 -BackupRo
 在專案根目錄雙擊 `backup.bat` 即可建立備份並驗證還原；完成或失敗時視窗會保留，按任意鍵關閉。請先啟動 Docker Desktop 與 PostgreSQL 容器，這個腳本不會啟動或停止 API。備份保存在專案的 `backups` 目錄，不會覆蓋正式資料庫。
 
 命令列或自動化需要完成後自行關閉時，可執行 `backup.bat --no-pause`，並檢查退出碼（0 成功、非 0 失敗）。PowerShell 腳本的預設備份目錄在腳本主體初始化，避免 Windows PowerShell 參數初始化時 `$PSScriptRoot` 為空的問題。
+
+### MinerU 預覽資產
+
+備份現已遞迴包含 `Rag.Api/uploads/pdf/ocr` 的版本化 PNG／座標 JSON；還原測試會核對資料庫 `ocrAssetId` 引用。MinerU 的 Docker 模型 volume 只存可重新下載的權重，不屬於使用者資料備份。啟動與解析日誌見 [MinerU 文件](pdf-ocr.md)。
