@@ -47,7 +47,8 @@ public static class YoutubeSearchChunks
                 {
                     firstSequence = segments[start].Sequence,
                     lastSequence = segments[end].Sequence,
-                    endSeconds = segments.Skip(start).Take(end - start + 1).Max(segment => segment.EndSeconds)
+                    endSeconds = segments.Skip(start).Take(end - start + 1).Max(segment => segment.EndSeconds),
+                    textSource = TranscriptEmbeddingText.Original
                 }),
                 CreatedAt = transcript.CreatedAt
             };
@@ -65,7 +66,7 @@ public static class YoutubeSearchChunks
     }
 
     private static string SearchText(YoutubeTranscriptSegment segment) =>
-        (string.IsNullOrWhiteSpace(segment.TraditionalChineseText) ? segment.Text : segment.TraditionalChineseText).Trim();
+        segment.Text.Trim();
 
     private static bool EndsWithAnySentenceMark(this string text) =>
         text.Length > 0 && "。！？.!?…".Contains(text[^1]);

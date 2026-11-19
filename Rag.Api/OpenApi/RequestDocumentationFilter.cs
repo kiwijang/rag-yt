@@ -12,7 +12,8 @@ public sealed class RequestDocumentationFilter : ISchemaFilter
             property.Description = name.ToLowerInvariant() switch
             {
                 "content" => "修改後的 RAG 切塊文字，不可空白，最多 20000 字元。只更新搜尋內容，不改原始逐字稿。",
-                "originalcontent" => "載入切塊時的原始 content；若資料已被修改，後端回傳 409，避免覆蓋。",
+                "originalcontent" => "載入切塊時的原始 content（不是 embeddingText）；若資料已被修改，後端回傳 409，避免覆蓋。",
+                "embeddingtext" => "本切塊對應的原文，供 embedding 與編輯使用；舊 content 仍保留供對照。",
                 "confirmationid" => "使用者確認的 YoutubeTranscripts.Id，必須與路徑 transcriptId 一致。",
                 "expectedrevision" => "GET deletion-preview 回應的 revision；資料已變更時需重新預覽及確認。",
                 "email" => "登入／註冊電子郵件；範例為佔位文字，請換成自己的帳號。",
@@ -36,7 +37,6 @@ public sealed class RequestDocumentationFilter : ISchemaFilter
                 "query" => "必填搜尋關鍵字。",
                 "sourcetype" => "可省略，1=YouTube、2=PDF。",
                 "sourceid" => "可省略的來源 ID，建議與 sourceType 一起指定。",
-                "take" when context.Type.Name == "SyncYoutubeSourceRequest" => "目前未使用；預設值 10 不會限制同步影片筆數。",
                 "take" => "預設 20，後端限制為 1–50。",
                 _ => property.Description
             };

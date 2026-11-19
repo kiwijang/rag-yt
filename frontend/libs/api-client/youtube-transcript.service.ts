@@ -67,6 +67,7 @@ export interface TranscriptDetail extends TranscriptTiming {
 export interface EditableTranscriptChunk {
   id: number;
   content: string;
+  embeddingText?: string | null;
   firstSequence: number;
   startSeconds: number;
   endSeconds: number;

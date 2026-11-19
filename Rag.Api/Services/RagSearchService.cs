@@ -19,7 +19,7 @@ public class RagSearchService
 
         take = Math.Clamp(take, 1, 50);
 
-        var q = _db.RagDocumentChunks.AsNoTracking().AsQueryable();
+        var q = RagVectorDocuments.Eligible(_db);
 
         if (sourceType.HasValue)
         {
@@ -53,8 +53,8 @@ public class RagSearchService
             .OrderByDescending(hit => hit.Score).ThenByDescending(hit => hit.Chunk.CreatedAt)
             .Take(take).ToArray();
         var transcriptIds = ranked.Select(hit => hit.Chunk.YoutubeTranscriptSegment?.YoutubeTranscriptId)
-            .OfType<int>().Distinct().ToArray();
-        var neighbors = transcriptIds.Length == 0 ? [] : await _db.RagDocumentChunks.AsNoTracking()
+            .OfType<int>().Distinct().ToList();
+        var neighbors = transcriptIds.Count == 0 ? [] : await _db.RagDocumentChunks.AsNoTracking()
             .Where(chunk => chunk.YoutubeTranscriptSegment != null &&
                 transcriptIds.Contains(chunk.YoutubeTranscriptSegment.YoutubeTranscriptId))
             .Include(chunk => chunk.YoutubeTranscriptSegment)

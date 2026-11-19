@@ -60,6 +60,10 @@ public class UploadPdfSourceRequest
 
 public class RagSearchRequest
 {
+    /// <summary>hybrid: BGE-M3 dense + Weaviate BM25; vector: dense only; keyword: PostgreSQL substring.</summary>
+    public string Mode { get; set; } = "hybrid";
+    /// <summary>Also search PDF page images using Jina CLIP v2 text-to-image embeddings.</summary>
+    public bool IncludeImages { get; set; } = true;
     public string Query { get; set; } = string.Empty;
     public SourceType? SourceType { get; set; }
     public int? SourceId { get; set; }

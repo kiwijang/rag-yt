@@ -110,6 +110,14 @@ builder.Services.AddScoped<PdfOcrService>();
 builder.Services.AddSingleton<PdfLayoutInferenceService>();
 builder.Services.AddHttpClient("MinerU", client => client.Timeout = Timeout.InfiniteTimeSpan);
 builder.Services.AddScoped<RagSearchService>();
+builder.Services.AddHttpClient("Embeddings", client => client.Timeout = TimeSpan.FromMinutes(30));
+builder.Services.AddHttpClient("Weaviate", client => client.Timeout = TimeSpan.FromMinutes(2));
+builder.Services.AddSingleton<BgeEmbeddingService>();
+builder.Services.AddSingleton<JinaEmbeddingService>();
+builder.Services.AddSingleton<WeaviateVectorStore>();
+builder.Services.AddSingleton<RagVectorIndexer>();
+builder.Services.AddHostedService(services => services.GetRequiredService<RagVectorIndexer>());
+builder.Services.AddScoped<RagSemanticSearchService>();
 
 builder.Services.AddCors(options =>
 {

@@ -1,0 +1,71 @@
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+(async()=>{
+ const browser=await chromium.launch({executablePath:process.env.CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
+ const page=await browser.newPage({viewport:{width:1440,height:1000}});const errors=[],indexCalls=[],writes=[];let rejectSave=false;
+ let progress={state:'idle',processed:0,total:0,updated:0,supportsScopedEmbedding:true,supportsAtomicChunkEmbedding:true,supportsOriginalTextEmbedding:true};
+ const originalJapanese='骨盤を安定させます。';const storedLegacy='舊譯文與手動註記，保留對照';
+ const video={videoId:'fixture0001',title:'Saved fixture',url:'https://example.invalid',availability:'public',durationSeconds:120,metadataStatus:'completed'};
+ const version={id:26,videoId:video.videoId,language:'zh',segmentCount:1,createdAt:'2026-11-15T00:00:00Z'};
+ page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('503'))errors.push(m.text());});
+ await page.addInitScript(()=>{localStorage.setItem('ragyt_token','fixture-only');localStorage.setItem('ragyt_user',JSON.stringify({roles:['Admin']}));});
+ await page.route('**/api/**',async route=>{
+  const req=route.request(),u=new URL(req.url());let data=[];
+  if(req.method()==='OPTIONS')return route.fulfill({status:204,headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*','Access-Control-Allow-Methods':'*'}});
+  if(u.pathname.endsWith('/index/status'))data=progress;
+  else if(u.pathname.endsWith('/index')&&req.method()==='POST'){
+   const scope=Object.fromEntries(u.searchParams);indexCalls.push(scope);progress={state:'completed',processed:1,total:1,updated:0,supportsScopedEmbedding:true,supportsAtomicChunkEmbedding:true,supportsOriginalTextEmbedding:true,...Object.fromEntries(Object.entries(scope).map(([k,v])=>[k,Number(v)]))};data=progress;
+  }
+  else if(u.pathname.endsWith('/youtube')&&req.method()==='GET')data=[{id:3,name:'YouTube fixture',url:'https://example.invalid'}];
+  else if(u.pathname.endsWith('/pdf')&&req.method()==='GET')data=[{id:7,name:'PDF fixture',url:'/fixture.pdf'}];
+  else if(u.pathname.endsWith('/videos')||u.pathname.endsWith('/enrich-metadata'))data=[video];
+  else if(u.pathname.endsWith('/transcripts'))data=[version];
+  else if(u.pathname.endsWith('/batches/latest'))data=null;
+  else if(u.pathname.endsWith('/26/chunks/99')&&req.method()==='PUT'){
+   const body=req.postDataJSON();writes.push(body);
+   if(rejectSave)return route.fulfill({status:503,json:{message:'Embedding 更新失敗，切塊尚未修改。'},headers:{'Access-Control-Allow-Origin':'*'}});
+   data={id:99,content:body.content,embeddingUpdated:true,cleanupPending:false};
+  }
+  else if(u.pathname.endsWith('/26/chunks'))data={transcriptId:26,videoId:video.videoId,language:'ja',createdAt:version.createdAt,segmentCount:1,isLatest:true,isBatchActive:false,chunks:[{id:99,content:storedLegacy,embeddingText:originalJapanese,firstSequence:1,startSeconds:0,endSeconds:2}]};
+  else if(req.method()!=='GET')throw Error('Unexpected mutation blocked: '+u.pathname);
+  await route.fulfill({json:data,headers:{'Access-Control-Allow-Origin':'*'}});
+ });
+ await page.goto('http://127.0.0.1:4200/dashboard');
+ await page.getByRole('tab',{name:'PDF OCR Sources',exact:true}).click();
+ const pdf=page.locator('section').filter({has:page.getByRole('heading',{name:'PDF OCR Sources',exact:true})});
+ await pdf.getByRole('button',{name:'進行 embedding',exact:true}).click();
+ await pdf.getByText('Embedding 完成',{exact:false}).waitFor();
+ if(indexCalls[0].sourceType!=='2'||indexCalls[0].sourceId!=='7')throw Error('PDF scope is incorrect');
+ await page.getByRole('tab',{name:'YouTube Sources',exact:true}).click();
+ await page.getByRole('button',{name:'View videos',exact:true}).click();
+ const synced=page.locator('section').filter({has:page.getByRole('heading',{name:'Synced videos · YouTube fixture',exact:true})});
+ await synced.getByRole('button',{name:'進行 embedding',exact:true}).click();
+ await synced.getByText('Embedding 完成',{exact:false}).waitFor();
+ if(indexCalls[1].sourceType!=='1'||indexCalls[1].sourceId!=='3')throw Error('YouTube scope is incorrect');
+ await synced.getByRole('button',{name:'管理 Version #26 的 RAG 切塊'}).click();
+ const manager=page.locator('app-transcript-chunk-manager dialog').first();
+ await manager.getByRole('button',{name:'進行 embedding',exact:true}).click();
+ await manager.getByText('Embedding 完成',{exact:false}).waitFor();
+ if(indexCalls[2].transcriptId!=='26')throw Error('Transcript scope is incorrect');
+ const before=indexCalls.length;
+ if(await manager.locator('textarea').inputValue()!==originalJapanese)throw Error('Editor must display original Japanese rather than legacy translation');
+ await manager.getByText('既有切塊文字（保留對照）',{exact:true}).click();await manager.getByText(storedLegacy,{exact:true}).waitFor();
+ await manager.locator('textarea').fill('edited fixture');
+ await manager.getByRole('button',{name:'儲存並更新 embedding',exact:true}).click();
+ await manager.getByText('已儲存切塊 #99 並更新 embedding。',{exact:true}).waitFor();
+ if(writes.length!==1||writes[0].originalContent!==storedLegacy||indexCalls.length!==before)throw Error('Save must send exactly one combined PUT with stored-value conflict check, no embedding POST');
+ rejectSave=true;await manager.locator('textarea').fill('unsaved fixture');
+ await manager.getByRole('button',{name:'儲存並更新 embedding',exact:true}).click();
+ await manager.getByText('Embedding 更新失敗，切塊尚未修改。',{exact:true}).waitFor();
+ if(await manager.locator('textarea').inputValue()!=='unsaved fixture'||indexCalls.length!==before)throw Error('Failed save must retain draft without a separate embedding call');
+ progress={state:'idle',processed:0,total:0,updated:0,supportsScopedEmbedding:true,supportsAtomicChunkEmbedding:true};
+ await page.reload();await page.getByRole('tab',{name:'PDF OCR Sources',exact:true}).click();await pdf.getByText('需更新後端 API；請先讓目前的工作完成，再重新啟動。',{exact:true}).waitFor();
+ if(!await pdf.getByRole('button',{name:'進行 embedding',exact:true}).isDisabled())throw Error('Old API must disable scoped embedding');
+ await page.getByRole('tab',{name:'YouTube Sources',exact:true}).click();
+ await page.getByRole('button',{name:'View videos',exact:true}).click();
+ await synced.getByRole('button',{name:'管理 Version #26 的 RAG 切塊'}).click();await manager.locator('textarea').fill('old backend draft');
+ if(!await manager.getByRole('button',{name:'儲存並更新 embedding',exact:true}).isDisabled())throw Error('Old API must disable combined save');
+ if(errors.length)throw Error(errors.join('\n'));
+ await manager.screenshot({path:(process.env.TEMP||'/tmp')+'/ragyt-chunk-embedding-ui.png'});
+ console.log('PASS generated APIs: PDF/source/version scopes; one PUT save; failure retains draft; old API compatibility guards; all calls mocked');
+ await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});

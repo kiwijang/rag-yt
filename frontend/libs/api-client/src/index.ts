@@ -20,3 +20,5 @@ export { AuthService } from './services/AuthService';
 export { RagService } from './services/RagService';
 export { RagApiService } from './services/RagApiService';
 export { SourceManagementService } from './services/SourceManagementService';
+export * from './vector-index';
+export { TranscriptChunksService } from './services/TranscriptChunksService';
