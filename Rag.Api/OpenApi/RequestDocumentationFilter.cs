@@ -11,6 +11,12 @@ public sealed class RequestDocumentationFilter : ISchemaFilter
         {
             property.Description = name.ToLowerInvariant() switch
             {
+                "content" when context.Type.Name == "ChatMessage" => "對話文字，不可空白，每則最多 12000 字元。",
+                "content" when context.Type.Name == "ChatResponse" => "Ollama 產生的完整回答，作為純文字顯示。",
+                "role" when context.Type.Name == "ChatMessage" => "僅 user 或 assistant，最後一則須為 user。",
+                "messages" when context.Type.Name == "ChatRequest" => "完整對話歷史，1–40 則，文字合計最多 48000 字元。",
+                "model" when context.Type.Name is "ChatRequest" or "ChatResponse" => "Ollama 已安裝模型名稱，例如 gemma4:12b；可先 GET /api/Chat/models。",
+                "name" when context.Type.Name == "ChatModel" => "Ollama 已安裝的模型名稱。",
                 "content" => "修改後的 RAG 切塊文字，不可空白，最多 20000 字元。只更新搜尋內容，不改原始逐字稿。",
                 "originalcontent" => "載入切塊時的原始 content（不是 embeddingText）；若資料已被修改，後端回傳 409，避免覆蓋。",
                 "embeddingtext" => "本切塊對應的原文，供 embedding 與編輯使用；舊 content 仍保留供對照。",
@@ -37,6 +43,7 @@ public sealed class RequestDocumentationFilter : ISchemaFilter
                 "query" => "必填搜尋關鍵字。",
                 "sourcetype" => "可省略，1=YouTube、2=PDF。",
                 "sourceid" => "可省略的來源 ID，建議與 sourceType 一起指定。",
+                "take" when context.Type.Name == "SyncYoutubeSourceRequest" => "目前未使用；預設值 10 不會限制同步影片筆數。",
                 "take" => "預設 20，後端限制為 1–50。",
                 _ => property.Description
             };

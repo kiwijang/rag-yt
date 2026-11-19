@@ -17,6 +17,12 @@ export type { UpdatePdfSourceRequest } from './models/UpdatePdfSourceRequest';
 export type { UpdateYoutubeSourceRequest } from './models/UpdateYoutubeSourceRequest';
 
 export { AuthService } from './services/AuthService';
+export { ChatService } from './services/ChatService';
+export type { ChatMessage } from './models/ChatMessage';
+export type { ChatModel } from './models/ChatModel';
+export type { ChatModelsResponse } from './models/ChatModelsResponse';
+export type { ChatRequest } from './models/ChatRequest';
+export type { ChatResponse } from './models/ChatResponse';
 export { RagService } from './services/RagService';
 export { RagApiService } from './services/RagApiService';
 export { SourceManagementService } from './services/SourceManagementService';

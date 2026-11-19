@@ -95,6 +95,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+builder.Services.AddHttpClient("Ollama", client => client.Timeout = TimeSpan.FromMinutes(5));
 builder.Services.AddHttpClient<YoutubeSyncService>();
 builder.Services.AddScoped<YoutubeTranscriptionService>();
 builder.Services.AddScoped<TranscriptChunkManagementService>();
