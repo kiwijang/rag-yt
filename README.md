@@ -27,12 +27,22 @@ start-all.bat
 ```
 
 The launcher requires the .NET SDK, Node.js/npm, `frontend/node_modules`, and the
-existing `.venv` GPU inference dependencies, plus standalone `yt-dlp` and `ffmpeg` on PATH. It starts all Docker Compose services and
+existing `.venv` GPU inference dependencies, plus standalone `yt-dlp` and `ffmpeg` on PATH, and a local Ollama installation. It starts all Docker Compose services and
 Angular in the background, then builds and runs Rag.Api with the `http` launch
 profile in the launcher window. The API uses `.venv/Scripts/python.exe`; separate
 Python activation and a second `dotnet run` are unnecessary.
 
-**Press Ctrl+C in the launcher window to stop the backend API.** Docker and Angular
+The launcher also prepares Ollama for the chat page: it reuses a running service,
+or starts `ollama serve` hidden in the background, then checks for `gemma4:12b`.
+A missing model is downloaded with `ollama pull gemma4:12b`; an installed model
+is reused. First download may take several minutes. No interactive `ollama run`
+window is needed because Rag.Api calls the model through Ollama's HTTP API.
+The model is loaded when a chat request arrives, rather than during startup.
+The URL follows `Ollama__BaseUrl` or `Rag.Api/appsettings.json` (`Ollama:BaseUrl`).
+An unavailable remote URL is reported without starting a different local service.
+Ollama preparation runs before replacing the existing API.
+
+**Press Ctrl+C in the launcher window to stop the backend API.** Docker, Angular and Ollama
 keep running. API output appears directly in that window; Angular logs are saved
 to `%TEMP%\ragyt-startup`. Open http://localhost:4200 after the API reports that it
 is listening on port 5085.
@@ -48,7 +58,12 @@ remove Docker volumes.
 
 Run `start-all.bat --check` to check prerequisites and page readiness without
 starting services. If startup fails, inspect the displayed error and Angular log
-files; Docker and Angular services that already started remain running.
+files; Docker, Angular and Ollama services that already started remain running.
+When the launcher starts Ollama, server logs are written to
+`%TEMP%\ragyt-startup\ollama.stderr.log` and `ollama.stdout.log`.
+If Ollama was already running (for example through its desktop app), it keeps its
+existing log location. `--check` also checks Ollama readiness and model presence
+without starting it or downloading a model.
 
 ## Run services
 
@@ -129,7 +144,7 @@ uploads exposed by YouTube through yt-dlp, including Shorts and archived live st
 sync uses the standalone yt-dlp executable through the C# media service.
 Use **View videos** to reopen the last saved list. Choose the spoken language above the list
 (Japanese, Chinese, English, or automatic detection), then click **Transcripts** to process
-every listed video sequentially. Use **View saved transcripts** to load existing versions.
+every listed video sequentially.
 The list uses yt-dlp availability metadata to label free, channel members-only, and other
 restricted videos. Missing metadata is shown as unconfirmed and can be checked per video.
 **Transcripts** processes the current filtered list, reuses the newest saved transcript with

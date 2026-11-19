@@ -92,6 +92,11 @@ try {
     $env:Transcription__PythonExecutable = $pythonPath
     if (-not $env:PdfOcr__ServiceUrl) { $env:PdfOcr__ServiceUrl = 'http://127.0.0.1:8090' }
     if (-not $env:PdfOcr__Device) { $env:PdfOcr__Device = 'auto' }
+    if (-not $env:Ollama__BaseUrl) {
+        $apiSettings = Get-Content -LiteralPath (Join-Path $projectRoot 'Rag.Api\appsettings.json') -Raw | ConvertFrom-Json
+        $env:Ollama__BaseUrl = $apiSettings.Ollama.BaseUrl
+        if (-not $env:Ollama__BaseUrl) { $env:Ollama__BaseUrl = 'http://localhost:11434' }
+    }
     $composeArguments = @('compose','-f',(Join-Path $projectRoot 'docker-compose.yml'))
     if ($env:PdfOcr__Device -eq 'cpu' -or ($env:PdfOcr__Device -eq 'auto' -and !(Get-Command nvidia-smi -ErrorAction SilentlyContinue))) {
         $composeArguments += @('-f',(Join-Path $projectRoot 'docker-compose.mineru-cpu.yml'))
@@ -101,6 +106,8 @@ try {
     }
 
     if ($CheckOnly) {
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $projectRoot 'scripts\setup-ollama.ps1') -ServiceUrl $env:Ollama__BaseUrl -Model 'gemma4:12b' -CheckOnly
+        if ($LASTEXITCODE -ne 0) { throw 'Ollama prerequisite check failed.' }
         Write-Host "Project: $projectRoot"
         Write-Host "Python: $pythonPath"
         Write-Host "Node runtime: $env:Transcription__JsRuntime"
@@ -110,12 +117,21 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Python inference dependency check failed; install Scripts/requirements-gpu.txt.' }
         Write-Host "MinerU URL: $env:PdfOcr__ServiceUrl"
         Write-Host "OCR requested device: $env:PdfOcr__Device"
+        $embeddingHealth = Invoke-RestMethod 'http://127.0.0.1:8091/health' -TimeoutSec 15
+        Write-Host "Embedding ready: $($embeddingHealth.status); CUDA: $($embeddingHealth.cudaAvailable)"
+        if ($embeddingHealth.status -ne 'ok') { throw 'Embedding health check failed.' }
+        $null = Invoke-RestMethod 'http://127.0.0.1:8080/v1/.well-known/ready' -TimeoutSec 15
         if (-not (Test-OcrEnvironment)) { throw 'MinerU health check failed. Start Docker Desktop and run start-all.bat without --check.' }
         Write-Host 'Prerequisite checks passed. No services were started.'
         exit 0
     }
 
-    # Build/check MinerU before stopping the existing API.
+    # Build/check inference services before stopping the existing API.
+    Write-Host 'Preparing Ollama and gemma4:12b...'
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $projectRoot 'scripts\setup-ollama.ps1') -ServiceUrl $env:Ollama__BaseUrl -Model 'gemma4:12b' -LogDirectory $logDir
+    if ($LASTEXITCODE -ne 0) { throw 'Ollama setup failed. The existing API was not stopped.' }
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $projectRoot 'scripts\setup-embeddings.ps1') -Device $env:PdfOcr__Device
+    if ($LASTEXITCODE -ne 0) { throw 'Embedding setup failed. The existing API was not stopped.' }
     Write-Host '[0/3] Preparing MinerU Docker OCR...'
     if ($env:PdfOcr__ServiceUrl -eq 'http://127.0.0.1:8090') {
         & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $projectRoot 'scripts\setup-pdf-ocr.ps1') -Device $env:PdfOcr__Device
@@ -146,7 +162,8 @@ try {
     Write-Host ''
     Write-Host '[3/3] Starting Rag.Api in this window...'
     Write-Host 'Press Ctrl+C in THIS window to stop the backend API.'
-    Write-Host 'Docker and Angular will keep running.'
+    Write-Host 'Docker, Angular and Ollama will keep running.'
+    Write-Host "Ollama:   $env:Ollama__BaseUrl (gemma4:12b)"
     Write-Host 'Frontend: http://localhost:4200'
     Write-Host 'API:      http://localhost:5085/swagger'
     Write-Host "Angular logs: $logDir"
