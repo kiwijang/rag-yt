@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService } from '@ragyt/api-client';
+import { AuthSessionService } from '../../services/auth-session.service';
 import {
   HlmBadgeDirective,
   HlmButtonDirective,
@@ -74,6 +75,7 @@ type LoginResponse = {
   `,
 })
 export class LoginPageComponent {
+  private readonly session = inject(AuthSessionService);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
 
@@ -110,8 +112,7 @@ export class LoginPageComponent {
             return;
           }
 
-          localStorage.setItem('ragyt_token', token);
-          localStorage.setItem('ragyt_user', JSON.stringify({ email: response.email ?? this.email(), roles: response.roles ?? [] }));
+          this.session.login(token, { email: response.email ?? this.email(), roles: response.roles ?? [] });
 
           const roles = response.roles ?? [];
           if (roles.includes('Admin')) {

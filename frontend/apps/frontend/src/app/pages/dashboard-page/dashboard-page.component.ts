@@ -1,4 +1,7 @@
 import { CommonModule } from '@angular/common';
+import { WorkspaceNavComponent } from '../../components/workspace-nav.component';
+import { AuthSessionService } from '../../services/auth-session.service';
+import { SourceEmbeddingButtonComponent } from './source-embedding-button.component';
 import { TranscriptChunkManagerComponent } from './transcript-chunk-manager.component';
 import { PdfDetectionPreviewComponent } from './pdf-detection-preview.component';
 import { Component, ElementRef, ViewChild, computed, DestroyRef, effect, inject, signal } from '@angular/core';
@@ -6,7 +9,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { catchError, EMPTY, exhaustMap, finalize, takeWhile, throwError, timer } from 'rxjs';
-import { ApiError, RagService, SourceManagementService } from '@ragyt/api-client';
+import { ApiError, SourceManagementService } from '@ragyt/api-client';
 import { SyncedYoutubeVideo, TranscriptBatch, TranscriptDetail, TranscriptTiming, TranscriptVersion, YoutubeTranscriptService } from '@ragyt/api-client/youtube-transcript';
 
 import {
@@ -28,36 +31,28 @@ type SourceSummary = {
   status?: number;
 };
 
-type RagItem = {
-  id: number;
-  sourceType: number;
-  sourceId: number;
-  sourceName: string;
-  snippet: string;
-  score: number;
-  videoUrl?: string;
-  startSeconds?: number;
-};
-
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
   imports: [
+    WorkspaceNavComponent,
     CommonModule,
+    SourceEmbeddingButtonComponent,
     TranscriptChunkManagerComponent,
     PdfDetectionPreviewComponent,
     FormsModule,
     HlmButtonDirective,
     HlmInputDirective,
-  HlmTooltipDirective,
+    HlmTooltipDirective,
     HlmCardDirective,
     HlmCardTitleDirective,
     HlmCardDescriptionDirective,
     HlmBadgeDirective,
   ],
   template: `
-    <div class="h-full overflow-y-auto bg-slate-50 dark:bg-slate-950">
-      <main class="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:px-6 sm:py-8">
+    <div class="rag-page">
+      <main class="rag-page-shell">
+        <app-workspace-nav [showLogout]="false" />
         <header class="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 class="text-3xl font-semibold tracking-tight">RAG Source Console</h1>
@@ -78,9 +73,22 @@ type RagItem = {
           <p role="alert" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-100">{{ errorMessage() }}</p>
         }
 
+        <div role="tablist" aria-label="管理頁面分頁" class="flex flex-wrap gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-900">
+          <button hlmBtn type="button" role="tab" id="console-tab-youtube" aria-controls="console-panel-youtube"
+            size="sm" hlmClass="h-auto min-h-9 whitespace-normal text-left" [variant]="consoleTab() === 'youtube' ? 'default' : 'ghost'"
+            [attr.aria-selected]="consoleTab() === 'youtube'" [attr.tabindex]="consoleTab() === 'youtube' ? 0 : -1"
+            (click)="consoleTab.set('youtube')" (keydown)="onConsoleTabKeydown($event)">YouTube Sources</button>
+          <button hlmBtn type="button" role="tab" id="console-tab-pdf" aria-controls="console-panel-pdf"
+            size="sm" hlmClass="h-auto min-h-9 whitespace-normal text-left" [variant]="consoleTab() === 'pdf' ? 'default' : 'ghost'"
+            [attr.aria-selected]="consoleTab() === 'pdf'" [attr.tabindex]="consoleTab() === 'pdf' ? 0 : -1"
+            (click)="consoleTab.set('pdf')" (keydown)="onConsoleTabKeydown($event)">PDF OCR Sources</button>
+        </div>
+
+        <div role="tabpanel" id="console-panel-youtube" aria-labelledby="console-tab-youtube" tabindex="0" [hidden]="consoleTab() !== 'youtube'" class="min-w-0 space-y-5">
         <section hlmCard class="grid gap-4 p-5 sm:p-6">
           <h2 hlmCardTitle>YouTube Sources</h2>
           @if (isAdmin()) {
+            <div role="group" aria-label="YouTube 來源輸入與操作" class="rag-search-panel grid gap-4">
             <div class="grid gap-3 sm:grid-cols-2">
               <input hlmInput [ngModel]="ytName()" (ngModelChange)="ytName.set($event)" aria-label="Source Name" placeholder="Source Name" />
               <input hlmInput [ngModel]="ytChannelId()" (ngModelChange)="ytChannelId.set($event)" aria-label="Channel ID" placeholder="Channel ID" />
@@ -88,6 +96,7 @@ type RagItem = {
               <input hlmInput [ngModel]="ytUrl()" (ngModelChange)="ytUrl.set($event)" aria-label="YouTube URL or channel URL" placeholder="YouTube URL or channel URL" />
             </div>
             <button hlmBtn class="justify-self-start" type="button" variant="default" size="sm" (click)="createYoutubeSource()" [disabled]="isSubmitting()">Add YouTube Source</button>
+            </div>
           }
 
           @if (isLoading()) {
@@ -122,8 +131,9 @@ type RagItem = {
 
         @for (sourceId of transcriptSourceId() ? [transcriptSourceId()!] : []; track sourceId) {
           <section hlmCard class="grid gap-4 p-5 sm:p-6">
-            <div class="flex items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center justify-between gap-3">
               <h2 hlmCardTitle>Synced videos · {{ transcriptSourceName() }}</h2>
+              <app-source-embedding-button [sourceType]="1" [sourceId]="sourceId" [disabled]="!!batchProgress()?.active" />
               <button hlmBtn type="button" variant="outline" size="sm" aria-controls="synced-videos-content"
                 [attr.aria-expanded]="!videosCollapsed()" (click)="videosCollapsed.set(!videosCollapsed())">
                 <svg aria-hidden="true" class="mr-2 h-4 w-4 transition-transform" [class.rotate-180]="videosCollapsed()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6" /></svg>
@@ -150,7 +160,7 @@ type RagItem = {
               </button>
             </div>
             <div role="tabpanel" [id]="'videos-panel-' + videoTab()" [attr.aria-labelledby]="'videos-tab-' + videoTab()" tabindex="0" class="grid gap-4">
-            <div class="flex flex-wrap items-end gap-2">
+            <div role="group" aria-label="影片篩選與處理" class="rag-search-panel flex flex-wrap items-end gap-3">
               <label class="grid gap-1 text-sm font-medium">
                 Spoken language
                 <select hlmInput #spokenLanguage [disabled]="isSubmitting() || !syncedVideos().length">
@@ -172,8 +182,6 @@ type RagItem = {
               </label>
               <button hlmBtn variant="default" size="sm" type="button" [disabled]="isSubmitting() || batchProgress()?.active || !transcribableVideos().length"
                 (click)="transcribeAll(sourceId, spokenLanguage.value)">Transcripts</button>
-              <button hlmBtn variant="outline" size="sm" type="button" [disabled]="isSubmitting() || !syncedVideos().length"
-                (click)="loadVersions(sourceId)">View saved transcripts</button>
               <button hlmBtn variant="outline" size="sm" type="button"
                 [disabled]="isSubmitting() || batchProgress()?.active"
                 (click)="rebuildSearchChunks(sourceId)">重建搜尋片段</button>
@@ -183,9 +191,6 @@ type RagItem = {
                 {{ isStoppingBatch() || (batchProgress()?.stopRequested && batchProgress()?.active) ? '停止中…' : '停止語音辨識' }}
               </button>
             </div>
-            @if (syncedVideos().length) {
-              <p class="text-sm text-slate-600 dark:text-slate-400">【{{ videoTab() === 'all' ? '全部影片' : videoTab() === 'saved' ? '已有逐字稿' : '沒有逐字稿' }}】Transcripts 處理目前清單中的 {{ transcribableVideos().length }} 支影片，略過已知受限的影片。</p>
-            }
             @if (metadataPending() > 0) {
               <p role="status" class="text-sm text-indigo-700 dark:text-indigo-300">正在背景補查 {{ metadataPending() }} 支影片的原始分類與長度，完成後會自動更新；不會轉錄影片。</p>
             }
@@ -196,10 +201,14 @@ type RagItem = {
               <p role="status" class="text-sm text-amber-700 dark:text-amber-300">暫時無法讀取批次進度，正在重試。</p>
             }
             @if (batchSummaryVisible() || batchProgress()?.active ? batchProgress() : null; as progress) {
-              <div class="grid gap-2 text-sm">
-                <p aria-live="polite">已處理 {{ batchCounts().processed }} / {{ progress.total }} 支影片</p>
-                <progress class="block h-3 w-full accent-indigo-600 dark:accent-indigo-400" aria-label="逐字稿批次處理進度"
-                  [value]="batchCounts().processed" [max]="progress.total"></progress>
+              <div hlmCard class="grid gap-2 text-sm p-4 bg-zinc-50">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <p aria-live="polite">已處理 {{ batchCounts().processed }} / {{ progress.total }} 支影片</p>
+                  <span aria-hidden="true" class="font-medium tabular-nums text-indigo-700 dark:text-indigo-300">{{ batchPercent() | number:'1.0-1' }}%</span>
+                </div>
+                <progress class="h-2.5" aria-label="逐字稿批次處理進度"
+                  [attr.aria-valuetext]="batchCounts().processed + ' / ' + progress.total + '，' + (batchPercent() | number:'1.0-1') + '%'"
+                  [value]="batchCounts().processed" [max]="progress.total > 0 ? progress.total : 1"></progress>
                 @if (progress.stopRequested || batchCounts().cancelled > 0) {
                   <p role="status" class="text-amber-700 dark:text-amber-300">
                     {{ progress.active ? '正在停止批次' : '批次已停止' }}，{{ batchCounts().cancelled }} 支影片已停止，未計入已處理數量。
@@ -210,9 +219,13 @@ type RagItem = {
                   <p class="text-slate-600 dark:text-slate-400">可以離開此頁，API 會在背景繼續處理。</p>
                 }
                 @for (video of runningVideos(); track video.videoId) {
-                  <p class="text-slate-600 dark:text-slate-400">{{ video.title }} · {{ stageLabels[video.stage] ?? '處理中' }}</p>
-                  <progress class="block h-2 w-full accent-indigo-600 dark:accent-indigo-400"
-                    [attr.aria-label]="video.title + '處理中'"></progress>
+                  <div role="status" class="flex items-start gap-2 text-slate-600 dark:text-slate-400">
+                    <svg aria-hidden="true" class="mt-0.5 h-4 w-4 shrink-0 animate-spin text-indigo-600 dark:text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 1-10 10" /></svg>
+                    <div>
+                      <p>{{ video.title }} · {{ stageLabels[video.stage] ?? '處理中' }}</p>
+                      <p class="text-xs">目前顯示處理階段，尚無單支影片的百分比。</p>
+                    </div>
+                  </div>
                 }
               </div>
             }
@@ -261,7 +274,7 @@ type RagItem = {
                   }
                 </li>
               } @empty {
-                <li>{{ videoTab() !== 'all' ? (transcriptVersionsStatus() === 'loading' ? '正在讀取已儲存的逐字稿…' : transcriptVersionsStatus() === 'error' ? '逐字稿讀取失敗，請按 View saved transcripts 重試。' : videoTab() === 'saved' ? '目前沒有符合條件且已有逐字稿的影片' : '目前沒有符合條件且沒有逐字稿的影片') : syncedVideos().length ? '此篩選條件沒有影片' : 'Use Sync Video to load videos from this source.' }}</li>
+                <li>{{ videoTab() !== 'all' ? (transcriptVersionsStatus() === 'loading' ? '正在讀取已儲存的逐字稿…' : transcriptVersionsStatus() === 'error' ? '逐字稿讀取失敗，請重新開啟影片清單重試。' : videoTab() === 'saved' ? '目前沒有符合條件且已有逐字稿的影片' : '目前沒有符合條件且沒有逐字稿的影片') : syncedVideos().length ? '此篩選條件沒有影片' : 'Use Sync Video to load videos from this source.' }}</li>
               }
             </ol>
             </div>
@@ -270,15 +283,19 @@ type RagItem = {
           </section>
         }
 
+        </div>
+        <div role="tabpanel" id="console-panel-pdf" aria-labelledby="console-tab-pdf" tabindex="0" [hidden]="consoleTab() !== 'pdf'" class="min-w-0 space-y-5">
         <section hlmCard class="grid gap-4 p-5 sm:p-6">
           <h2 hlmCardTitle>PDF OCR Sources</h2>
           @if (isAdmin()) {
+            <div role="group" aria-label="PDF 來源輸入與操作" class="rag-search-panel grid gap-4">
             <div class="grid gap-3 sm:grid-cols-2">
               <input hlmInput [ngModel]="pdfName()" (ngModelChange)="pdfName.set($event)" aria-label="PDF Source Name" placeholder="PDF Source Name" />
               <input hlmInput [ngModel]="pdfDescription()" (ngModelChange)="pdfDescription.set($event)" aria-label="Description" placeholder="Description" />
               <input hlmInput type="file" aria-label="PDF file" accept="application/pdf" (change)="onPdfFileSelected($event)" />
             </div>
             <button hlmBtn class="justify-self-start" type="button" variant="default" size="sm" (click)="uploadPdf()" [disabled]="isSubmitting()">上傳 PDF 並建立 RAG 切塊</button>
+            </div>
           }
 
           <div class="grid list-none gap-3">
@@ -289,7 +306,7 @@ type RagItem = {
                   <p class="break-all text-sm text-slate-600 dark:text-slate-400">{{ source.url }}</p>
                 </div>
                 @if (isAdmin()) {
-                  <div class="flex flex-wrap gap-2"><button hlmBtn type="button" variant="outline" size="sm" (click)="openPdfChunks(source.id)">查看 RAG 切塊</button><button hlmBtn type="button" variant="destructive" size="sm" (click)="deletePdfSource(source.id)">Delete</button></div>
+                  <div class="flex flex-wrap gap-2"><button hlmBtn type="button" variant="outline" size="sm" (click)="openPdfChunks(source.id)">查看 RAG 切塊</button><app-source-embedding-button [sourceType]="2" [sourceId]="source.id" /><button hlmBtn type="button" variant="destructive" size="sm" (click)="deletePdfSource(source.id)">Delete</button></div>
                 }
               </article>
             } @empty {
@@ -298,34 +315,7 @@ type RagItem = {
           </div>
         </section>
 
-        <section hlmCard class="grid gap-4 p-5 sm:p-6">
-          <h2 hlmCardTitle>RAG Search (with source filter)</h2>
-          <div class="grid gap-3 sm:grid-cols-3">
-            <input hlmInput [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" aria-label="Enter query" placeholder="Enter query" />
-            <select hlmInput aria-label="Search source type" [ngModel]="searchSourceType()" (ngModelChange)="searchSourceType.set($event)">
-              <option value="">All Source Types</option>
-              <option value="1">YouTube</option>
-              <option value="2">PDF</option>
-            </select>
-            <input hlmInput [ngModel]="searchSourceId()" (ngModelChange)="searchSourceId.set($event)" aria-label="Source ID (optional)" placeholder="Source ID (optional)" />
-          </div>
-          <button hlmBtn class="justify-self-start" type="button" variant="default" size="sm" (click)="searchRag()" [disabled]="isSubmitting()">Search</button>
-
-          <div class="grid gap-3">
-            @for (item of ragResults(); track item.id) {
-              <article hlmCard class="grid min-w-0 gap-2 break-words p-4">
-                <p class="text-xs text-slate-600 dark:text-slate-400">{{ item.sourceType === 1 ? 'YouTube' : 'PDF' }} #{{ item.sourceId }} | {{ item.sourceName }} | score {{ item.score }}</p>
-                <p class="whitespace-pre-line">{{ item.snippet }}</p>
-                  @if (item.videoUrl && item.startSeconds != null) {
-                    <a hlmBtn variant="link" size="sm" hlmClass="h-auto justify-start whitespace-normal p-0 text-left break-all" [href]="item.videoUrl"
-                      target="_blank" rel="noopener noreferrer">Watch at {{ item.startSeconds | number:'1.0-2' }}s</a>
-                  }
-              </article>
-            } @empty {
-              <p class="text-sm text-slate-600 dark:text-slate-400">No result yet. Run a query above.</p>
-            }
-          </div>
-        </section>
+        </div>
         <dialog #pdfChunksDialog aria-labelledby="pdf-chunks-title" class="w-[min(95vw,64rem)] max-h-[85vh] overflow-auto rounded-lg bg-white p-6 text-slate-900 backdrop:bg-black/50 dark:bg-slate-900 dark:text-slate-100">
           <div class="flex items-center justify-between gap-3">
             <h2 id="pdf-chunks-title" class="text-lg font-semibold">PDF RAG 切塊 · 來源 #{{ pdfChunkSourceId() }}</h2>
@@ -333,6 +323,7 @@ type RagItem = {
           </div>
           <p class="my-3 text-sm">由 Docker MinerU 解析文字與掃描頁面。依版面段落切塊（最多 900 字元、重疊約 120 字元），表格保留完整結構。中繼資料顯示辨識裝置、區塊類型與座標；點選切塊可查看原文範圍。</p>
           <button hlmBtn type="button" variant="outline" size="sm" [disabled]="pdfChunksBusy()" (click)="rebuildPdfChunks()">從原始 PDF 重建切塊</button>
+          @if (pdfChunkSourceId(); as pdfId) { <app-source-embedding-button [sourceType]="2" [sourceId]="pdfId" [disabled]="pdfChunksBusy()" /> }
           @if (pdfChunksError()) { <p role="alert" class="my-3 text-red-600 dark:text-red-400">{{ pdfChunksError() }}</p> }
           @if (pdfChunksBusy()) { <p role="status">處理中…</p> }
           <app-pdf-detection-preview [sourceId]="pdfChunkSourceId()" [pages]="pdfPages()" [chunks]="pdfChunks()"
@@ -397,7 +388,7 @@ type RagItem = {
                 @for (segment of detail.segments; track segment.sequence) {
                   <li class="grid gap-1 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
                     <p class="text-xs tabular-nums text-slate-500">#{{ segment.sequence }} · {{ segment.startSeconds | number:'1.0-2' }}s – {{ segment.endSeconds | number:'1.0-2' }}s</p>
-                    <p class="whitespace-pre-wrap break-words">{{ segment.text }}</p>
+                    <p [attr.lang]="detail.language || null" class="whitespace-pre-wrap break-words">{{ segment.text }}</p>
                     @if (segment.traditionalChineseText && segment.traditionalChineseText !== segment.text) {
                       <p lang="zh-Hant" class="whitespace-pre-wrap break-words text-indigo-700 dark:text-indigo-300">繁中：{{ segment.traditionalChineseText }}</p>
                     }
@@ -415,9 +406,19 @@ type RagItem = {
   `,
 })
 export class DashboardPageComponent {
+  private readonly session = inject(AuthSessionService);
+  readonly consoleTab = signal<'youtube' | 'pdf'>('youtube');
+  onConsoleTabKeydown(event: KeyboardEvent): void {
+    const tabs = ['youtube', 'pdf'] as const;
+    const current = tabs.indexOf(this.consoleTab());
+    const next = event.key === 'ArrowRight' ? (current + 1) % tabs.length : event.key === 'ArrowLeft' ? (current + tabs.length - 1) % tabs.length : event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : null;
+    if (next === null) return;
+    event.preventDefault();
+    this.consoleTab.set(tabs[next]);
+    (event.currentTarget as HTMLElement).closest('[role="tablist"]')?.querySelector<HTMLElement>(`#console-tab-${tabs[next]}`)?.focus();
+  }
   private readonly router = inject(Router);
   private readonly sourceManagementService = inject(SourceManagementService);
-  private readonly ragService = inject(RagService);
   private readonly transcripts = inject(YoutubeTranscriptService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -473,6 +474,10 @@ export class DashboardPageComponent {
       cancelled: videos.filter(video => video.state === 'cancelled').length,
     };
   });
+  readonly batchPercent = computed(() => {
+    const total = this.batchProgress()?.total ?? 0;
+    return total > 0 ? Math.min(100, Math.max(0, this.batchCounts().processed / total * 100)) : 0;
+  });
   readonly batchConnectionLost = signal(false);
   private readonly batchRefresh = signal(0);
   readonly runningVideos = computed(() => {
@@ -517,7 +522,6 @@ export class DashboardPageComponent {
 
   readonly youtubeSources = signal<SourceSummary[]>([]);
   readonly pdfSources = signal<SourceSummary[]>([]);
-  readonly ragResults = signal<RagItem[]>([]);
   readonly userRole = signal('User');
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
@@ -533,9 +537,6 @@ export class DashboardPageComponent {
   readonly pdfDescription = signal('');
   readonly selectedPdfFile = signal<File | null>(null);
 
-  readonly searchQuery = signal('');
-  readonly searchSourceType = signal('');
-  readonly searchSourceId = signal('');
 
   readonly isAdmin = computed(() => this.userRole() === 'Admin');
 
@@ -544,7 +545,7 @@ export class DashboardPageComponent {
     effect(onCleanup => {
       const sourceId = this.transcriptSourceId();
       this.metadataRefresh();
-      if (sourceId === null) return;
+      if (sourceId === null || !this.session.state()?.roles.includes('Admin')) return;
       const polling = timer(1000, 5000).pipe(
         exhaustMap(() => this.transcripts.videos(sourceId).pipe(
           catchError(() => { this.metadataError.set('暫時無法刷新影片資訊，正在重試。'); return EMPTY; }),
@@ -561,7 +562,7 @@ export class DashboardPageComponent {
     effect(onCleanup => {
       const sourceId = this.transcriptSourceId();
       this.batchRefresh();
-      if (sourceId === null) return;
+      if (sourceId === null || !this.session.state()?.roles.includes('Admin')) return;
 
       const progress = timer(0, 2000).pipe(
         exhaustMap(() => this.transcripts.batch(sourceId).pipe(
@@ -615,9 +616,8 @@ export class DashboardPageComponent {
   }
 
   logout(): void {
-    localStorage.removeItem('ragyt_token');
-    localStorage.removeItem('ragyt_user');
-    this.router.navigateByUrl('/login');
+    this.session.clear();
+    this.router.navigateByUrl('/login', { replaceUrl: true });
   }
 
   private setBusy(on: boolean): void {
@@ -864,8 +864,7 @@ export class DashboardPageComponent {
   }
 
   onChunkDataChanged(event: { sourceId: number; deletedTranscriptId?: number }): void {
-    this.ragResults.set([]);
-    this.message.set('RAG 資料已更新，請重新搜尋以查看結果。');
+    this.message.set('RAG 資料已更新，可前往 RAG Query 重新搜尋。');
     if (this.transcriptSourceId() === event.sourceId) this.loadVersions(event.sourceId);
     if (event.deletedTranscriptId === this.selectedTranscriptId()) this.transcriptDialog.nativeElement.close();
   }
@@ -995,7 +994,7 @@ export class DashboardPageComponent {
     this.pdfChunksBusy.set(true);
     this.pdfChunksError.set('');
     this.transcripts.rebuildPdfChunks(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => { this.ragResults.set([]); this.fetchPdfChunks(id); },
+      next: () => this.fetchPdfChunks(id),
       error: error => { this.pdfChunksBusy.set(false); this.pdfChunksError.set(this.getApiMessage(error, '無法重建 PDF 切塊。')); },
     });
   }
@@ -1048,33 +1047,4 @@ export class DashboardPageComponent {
       });
   }
 
-  searchRag(): void {
-    if (!this.searchQuery().trim()) {
-      this.errorMessage.set('Search query is required.');
-      return;
-    }
-
-    const sourceTypeRaw = this.searchSourceType().trim();
-    const sourceIdRaw = this.searchSourceId().trim();
-
-    this.setBusy(true);
-    this.ragService
-      .getApiRagSearch({
-        query: this.searchQuery().trim(),
-        sourceType: sourceTypeRaw ? (Number(sourceTypeRaw) as 1 | 2) : undefined,
-        sourceId: sourceIdRaw ? Number(sourceIdRaw) : undefined,
-        take: 20,
-      })
-      .pipe(finalize(() => this.setBusy(false)))
-      .subscribe({
-        next: (res: { items?: RagItem[] }) => {
-          this.ragResults.set(res?.items ?? []);
-          this.message.set(`RAG retrieved ${res?.items?.length ?? 0} item(s).`);
-        },
-        error: () => {
-          this.ragResults.set([]);
-          this.errorMessage.set('RAG search failed.');
-        },
-      });
-  }
 }

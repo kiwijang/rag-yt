@@ -4,13 +4,84 @@
 @import '@ionic/angular/css/structure.css';
 @import '@ionic/angular/css/typography.css';
 @import '@ionic/angular/css/display.css';
+@import '@fontsource-variable/noto-sans-tc';
+@import '@fontsource-variable/noto-sans-jp';
+@import '@fontsource-variable/noto-sans';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .rag-page {
+    @apply h-full overflow-y-auto bg-slate-200 dark:bg-slate-950;
+    scrollbar-gutter: stable;
+  }
+
+  .rag-page-shell {
+    @apply mx-auto grid w-full min-w-0 max-w-7xl grid-cols-1 gap-5 px-4 py-6 sm:px-6 sm:py-8;
+  }
+
+  .rag-search-panel {
+    @apply rounded-xl border border-zinc-100 shadow-sm bg-zinc-200 p-4 dark:border-indigo-900/60 dark:bg-indigo-950/40;
+  }
+
+  progress {
+    @apply block w-full overflow-hidden rounded-full border-0 bg-slate-100 dark:bg-slate-800;
+    appearance: none;
+    -webkit-appearance: none;
+    color: var(--ion-color-primary);
+  }
+
+  progress::-webkit-progress-bar {
+    border-radius: 9999px;
+    background: transparent;
+  }
+
+  progress::-webkit-progress-value {
+    border-radius: 9999px;
+    background: var(--ion-color-primary);
+    transition: width 200ms ease;
+  }
+
+  progress::-moz-progress-bar {
+    border-radius: 9999px;
+    background: var(--ion-color-primary);
+  }
+
+  progress:indeterminate {
+    background-image: linear-gradient(var(--ion-color-primary), var(--ion-color-primary));
+    background-repeat: no-repeat;
+    background-size: 35% 100%;
+    animation: rag-progress-indeterminate 1.4s ease-in-out infinite;
+  }
+
+  progress:indeterminate::-moz-progress-bar {
+    background: transparent;
+    animation: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    progress::-webkit-progress-value {
+      transition: none;
+    }
+
+    progress:indeterminate {
+      animation: none;
+      background-position: 50% 0;
+    }
+  }
+}
+
+@keyframes rag-progress-indeterminate {
+  from { background-position: -60% 0; }
+  to { background-position: 160% 0; }
+}
+
 :root {
   color-scheme: light;
+  --app-font-sans: 'Noto Sans TC Variable', 'Noto Sans JP Variable', 'Noto Sans Variable', sans-serif;
+  --ion-font-family: var(--app-font-sans);
   --ion-color-primary: #4338ca;
   --ion-background-color: #f8fafc;
   --ion-text-color: #0f172a;
@@ -26,7 +97,29 @@
 html, body {
   margin: 0;
   min-height: 100%;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--app-font-sans);
   background: var(--ion-background-color);
   color: var(--ion-text-color);
+}
+
+[lang|='ja'] {
+  --app-font-sans: 'Noto Sans JP Variable', 'Noto Sans TC Variable', 'Noto Sans Variable', sans-serif;
+  --ion-font-family: var(--app-font-sans);
+  font-family: var(--app-font-sans);
+}
+
+[lang|='en'] {
+  --app-font-sans: 'Noto Sans Variable', 'Noto Sans TC Variable', 'Noto Sans JP Variable', sans-serif;
+  --ion-font-family: var(--app-font-sans);
+  font-family: var(--app-font-sans);
+}
+
+[lang|='zh'] {
+  --app-font-sans: 'Noto Sans TC Variable', 'Noto Sans JP Variable', 'Noto Sans Variable', sans-serif;
+  --ion-font-family: var(--app-font-sans);
+  font-family: var(--app-font-sans);
+}
+
+input, select, textarea, button {
+  font-family: inherit;
 }

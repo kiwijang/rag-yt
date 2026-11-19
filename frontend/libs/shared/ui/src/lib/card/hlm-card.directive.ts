@@ -3,7 +3,7 @@ import { Directive } from '@angular/core';
 @Directive({
   selector: '[hlmCard]',
   standalone: true,
-  host: { class: 'rounded-xl border border-slate-200 bg-white text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50' },
+  host: { class: 'rounded-xl border border-slate-200 bg-white text-slate-950 shadow-md dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50' },
 })
 export class HlmCardDirective {}
 

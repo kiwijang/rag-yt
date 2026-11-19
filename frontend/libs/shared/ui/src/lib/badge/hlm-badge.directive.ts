@@ -20,7 +20,7 @@ export class HlmBadgeDirective {
   readonly hlmClass = input('');
 
   protected readonly classes = computed(() => cn(
-    'inline-flex w-fit items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold',
+    'inline-flex w-fit items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-semibold self-center',
     variants[this.variant()],
     this.hlmClass(),
   ));
